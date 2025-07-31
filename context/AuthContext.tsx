@@ -52,12 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
     (async () => {
       const token = await getTokenFromCookies();
+
       if (!token) {
         setLoading(false);
         return;
       }
   
       const decoded = decodeToken(token);
+
       if (!decoded) {
         router.push('/auth/login');
         return;
@@ -65,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
       try {
         const userData = await fetchMyProfile();
+        
         if (!userData) throw new Error('No profile data');
   
         setUser({
@@ -78,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error('Failed to load user profile', err);
         const refreshToken = await getRefreshTokenFromCookies();
+
         if (!refreshToken) {
           router.push('/auth/login');
           return;
@@ -87,8 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     })();
-  }, [pathname, router]);
-  
+  }, [pathname, router]);  
 
   return (
     <AuthContext.Provider

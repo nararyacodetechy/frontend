@@ -9,15 +9,11 @@ import SectionTestimoni from '@/components/landing/SectionTestimoni'
 import SectionOrder from '@/components/landing/SectionOrder'
 import SectionCTA from '@/components/landing/SectionCTA'
 import RedirectIfAuthenticated from '@/components/general/RedirectIfAuthenticated'
-import { cookies } from 'next/headers'
 
-export default async function LandingPage() {
-  const cookieStore = await cookies(); // await di sini
-  const token = cookieStore.get('token')?.value;
-
+export default function LandingPage() {
   return (
     <>
-      <RedirectIfAuthenticated token={token} />
+      <RedirectIfAuthenticated />
       <Header />
       <main>
         <SectionHero />
@@ -31,5 +27,5 @@ export default async function LandingPage() {
       </main>
       <Footer />
     </>
-  )
+  );
 }

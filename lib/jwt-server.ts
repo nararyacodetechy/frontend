@@ -7,10 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET as string;
 if (!process.env.JWT_SECRET) {
   console.error('❌ JWT_SECRET is undefined');
   throw new Error('Missing JWT_SECRET');
-} else {
-  console.log('✅ JWT_SECRET is defined:', process.env.JWT_SECRET);
-}
-
+} 
 
 export function signToken(payload: object, expiresIn: string = '1h'): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn } as jwt.SignOptions);

@@ -58,7 +58,6 @@ export function decodeToken(token: string): DecodedToken | null {
 export async function isAuthenticated(): Promise<boolean> {
   const token = await getTokenFromCookies();
   if (!token) {
-    console.log('isAuthenticated: No valid token');
     return false;
   }
   const decoded = decodeToken(token);

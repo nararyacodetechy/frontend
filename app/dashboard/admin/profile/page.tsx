@@ -4,16 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
-import { getTokenFromCookies } from '@/lib/auth-client';
-
-interface Profile {
-  id: string;
-  email: string;
-  fullName: string;
-  roles: string[];
-  activeRole: string;
-  adminPrivileges?: string[];
-}
+import { Profile } from '@/types/user';
+import { fetchMyProfile } from '@/services/profileService';
 
 export default function AdminProfilePage() {
   const { user, loading } = useAuth();
@@ -28,20 +20,16 @@ export default function AdminProfilePage() {
       return;
     }
 
-    const fetchProfile = async () => {
+    const getProfile = async () => {
       try {
-        const token = await getTokenFromCookies();
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error('Failed to fetch profile');
-        const data = await res.json();
+        const data = await fetchMyProfile();
         setProfile(data);
       } catch (err: any) {
         setError(err.message);
       }
     };
-    fetchProfile();
+
+    getProfile();
   }, [user, loading, router]);
 
   if (loading || !profile) {

@@ -1,10 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 // Define nav link type with dynamic href
 type NavLink = {
@@ -87,19 +89,37 @@ const NAV_CONFIG: Partial<Record<RoleEnum, NavLink[]>> = {
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout, loading, switchRole } = useAuth();
+  const [isReady, setIsReady] = useState(false);
 
-  if (loading) {
+  // Pindahkan semua logic ke dalam useEffect, jangan return di luar hook
+  useEffect(() => {
+    if (loading) return;
+
+    const isAuthPage = pathname?.startsWith('/auth');
+    const isRootPage = pathname === '/';
+
+    if (!user && !isAuthPage) {
+      router.push('/auth/login');
+    } else if (user && isRootPage) {
+      router.push(`/dashboard/${user.activeRole.toLowerCase()}`);
+    } else {
+      setIsReady(true);
+    }
+  }, [loading, user, pathname, router]);
+
+  if (loading || !isReady || !user) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!user) {
-    router.push('/auth/login');
-    return null;
-  }
+  const matchedRole = Object.values(RoleEnum).find(role =>
+    pathname?.startsWith(`/dashboard/${role.toLowerCase()}`)
+  );
 
-  // Generate links with dynamic href
-  const navLinks = (NAV_CONFIG[user.activeRole] ?? []).map((link) => ({
+  const currentRole = matchedRole ?? user.activeRole;
+
+  const navLinks = (NAV_CONFIG[currentRole] ?? []).map((link) => ({
     label: link.label,
     href: link.getHref(user.activeRole),
   }));
@@ -120,7 +140,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <ul className="space-y-2">
             {navLinks.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className="block p-2 hover:bg-gray-700 rounded">
+                <Link
+                  href={link.href}
+                  className={`block p-2 rounded hover:bg-gray-700 ${
+                    pathname === link.href ? 'bg-gray-700 font-semibold' : ''
+                  }`}
+                >
                   {link.label}
                 </Link>
               </li>
@@ -128,7 +153,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </ul>
         </nav>
 
-        {/* Logout Button */}
+        <div className="mt-4">
+          <label htmlFor="role" className="block text-sm mb-1">Switch Role</label>
+          <select
+            id="role"
+            value={user.activeRole}
+            onChange={handleRoleChange}
+            className="w-full text-black rounded p-2"
+          >
+            {user.roles.map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button
           onClick={logout}
           className="mt-4 w-full bg-red-600 text-white py-2 rounded hover:bg-red-700"

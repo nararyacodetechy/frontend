@@ -7,6 +7,7 @@ export interface Users {
   fullName: string | null;
   roles: RoleEnum[];
   activeRole: RoleEnum;
+  isEmailVerified: boolean;
 }
 
 export interface RegisterPayload {
@@ -39,4 +40,12 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   loading: boolean;
   switchRole: (role: RoleEnum) => void;
+}
+
+export interface DecodedToken {
+  userId: string;
+  email: string;
+  activeRole: RoleEnum;
+  iat?: number;
+  exp?: number;
 }

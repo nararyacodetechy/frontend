@@ -10,6 +10,7 @@ import {
 import type { AuthContextType, Users } from '@/types/auth';
 import { PUBLIC_ROUTES } from '@/lib/public-routes';
 import { RoleEnum } from '@/types/role';
+import { fetchMyProfile } from '@/services/profileService';
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -40,7 +41,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // 1) If we're on a public page, skip all checks
     if (
       PUBLIC_ROUTES.some((route) =>
         route === '/' ? pathname === '/' : pathname.startsWith(route)
@@ -49,52 +49,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
-
-    // 2) Otherwise, see if there's a token at all
+  
     (async () => {
       const token = await getTokenFromCookies();
       if (!token) {
-        // No token? Let middleware handle redirect; we're done here.
         setLoading(false);
         return;
       }
-
-      // 3) We *do* have a token, so try decode + fetch profile
+  
       const decoded = decodeToken(token);
       if (!decoded) {
-        // Bad token: must force login
         router.push('/auth/login');
         return;
       }
-
+  
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/profile/me`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (!res.ok) throw new Error('Profile fetch failed');
-
-        const userData = await res.json();
+        const userData = await fetchMyProfile();
+        if (!userData) throw new Error('No profile data');
+  
         setUser({
           id: userData.id,
-          fullName: userData.fullName || 'Unknown',
+          fullName: userData.fullName,
           email: userData.email,
           roles: userData.roles || [],
           activeRole: userData.activeRole,
+          isEmailVerified: userData.isEmailVerified ?? false,
         });
       } catch (err) {
-        // Token might be expired → try refresh
+        console.error('Failed to load user profile', err);
         const refreshToken = await getRefreshTokenFromCookies();
         if (!refreshToken) {
           router.push('/auth/login');
           return;
         }
-        // implement refresh logic as needed
+        // TODO: implement refresh logic here
       } finally {
         setLoading(false);
       }
     })();
   }, [pathname, router]);
+  
 
   return (
     <AuthContext.Provider

@@ -5,13 +5,18 @@ import { RoleEnum } from '@/types/role';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
+import Header from '@/components/landing/Header';
+import Footer from '@/components/landing/Footer';
+import SectionHero from '@/components/landing/SectionHero';
+import SectionWhyWebApp from '@/components/landing/SectionWhyWebApp';
+
 export default function MyPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || ![RoleEnum.USER, RoleEnum.CUSTOMER, RoleEnum.ADMIN].includes(user.activeRole))) {
-      console.log('Redirecting from my-page due to invalid role:', user?.activeRole); // Debug
+    if (!loading && (!user || ![RoleEnum.USER, RoleEnum.CUSTOMER].includes(user.activeRole))) {
+      console.log('Redirecting from my-page due to invalid role:', user?.activeRole);
       router.push('/auth/login');
     }
   }, [user, loading, router]);
@@ -21,13 +26,12 @@ export default function MyPage() {
   }
 
   if (!user) {
-    return null; // Middleware or useEffect will handle redirection
+    return null; // Redirection handled
   }
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">My Page Overview</h2>
-      <p>Welcome to your personal page, {user.fullName || 'User'}. Use the sidebar to navigate to your profile or other features.</p>
-    </div>
+    <>
+      <p className="text-center">Welcome to the {user.activeRole} </p>
+    </>
   );
 }

@@ -1,15 +1,10 @@
 'use client';
 
+import { DecodedToken } from '@/types/auth';
 import { RoleEnum } from '@/types/role';
 import { jwtDecode } from 'jwt-decode';
 
-export interface DecodedToken {
-  userId: string;
-  email: string;
-  activeRole: RoleEnum;
-  iat?: number;
-  exp?: number;
-}
+
 
 export async function getTokenFromCookies(): Promise<string | null> {
   // Retry up to 3 times with 100ms delay to handle timing issues
@@ -28,9 +23,6 @@ export async function getTokenFromCookies(): Promise<string | null> {
     // Wait 100ms before retrying
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  // Optional: Check localStorage
-  // const lsToken = localStorage.getItem('accessToken');
-  // if (lsToken && lsToken.includes('.')) return lsToken;
   return null;
 }
 
@@ -40,8 +32,6 @@ export async function getRefreshTokenFromCookies(): Promise<string | null> {
   const refreshToken = refreshTokenCookie ? refreshTokenCookie.split('=')[1] : null;
   if (!refreshToken) {
     console.error('No refresh token cookie found');
-    // Optional: Check localStorage
-    // return localStorage.getItem('refreshToken');
     return null;
   }
   return refreshToken;

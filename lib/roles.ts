@@ -26,6 +26,10 @@ export function isCustomer(role?: Role) {
   return role === RoleEnum.CUSTOMER;
 }
 
+export function isUser(role?: Role) {
+  return role === RoleEnum.USER;
+}
+
 export function getDashboardPathByRole(role: Role) {
   switch (role) {
     case RoleEnum.USER:

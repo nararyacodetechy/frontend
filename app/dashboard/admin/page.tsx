@@ -11,11 +11,16 @@ export default function AdminDashboard() {
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
-
-  if (!user || user.activeRole !== RoleEnum.ADMIN) {
+  
+  if (!user) {
+    return null; // biarkan middleware atau context handle redirect
+  }
+  
+  if (user.activeRole !== RoleEnum.ADMIN) {
     router.push('/auth/login');
     return null;
   }
+  
 
   return (
     <div className="bg-white p-6 rounded shadow">

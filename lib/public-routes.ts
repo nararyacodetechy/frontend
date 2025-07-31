@@ -2,7 +2,9 @@
 export const PUBLIC_ROUTES = [
     '/',
     '/auth/login',
+    '/auth/login/success',
     '/auth/register',
+    '/auth/register/success',
     '/auth/verify-email-sent',
     '/auth/forgot-password',
     '/auth/reset-password',

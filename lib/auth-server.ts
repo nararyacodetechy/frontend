@@ -3,14 +3,7 @@
 import { cookies } from 'next/headers';
 import { RoleEnum } from '@/types/role';
 import { jwtDecode } from 'jwt-decode';
-
-export interface DecodedToken {
-  userId: string;
-  email: string;
-  activeRole: RoleEnum;
-  iat?: number;
-  exp?: number;
-}
+import { DecodedToken } from '@/types/auth';
 
 export async function getTokenFromCookies(): Promise<string | null> {
   const cookieStore = await cookies();

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getTokenFromCookies, decodeToken, isAuthenticated, refreshAccessToken } from './lib/auth-server';
+import { decodeToken } from './lib/auth-server';
 import { RoleEnum } from './types/role';
 import { PUBLIC_ROUTES } from '@/lib/public-routes';
+import { DecodedToken } from './types/auth';
 
 const roleBasedRoutes: { [key in RoleEnum]: string } = {
-  [RoleEnum.USER]: '/',
+  [RoleEnum.USER]: '/my-page/user',
   [RoleEnum.CUSTOMER]: '/my-page/customer',
   [RoleEnum.PRODUCT_MANAGER]: '/dashboard/product-manager',
   [RoleEnum.DESIGNER]: '/dashboard/designer',
@@ -16,74 +17,97 @@ const roleBasedRoutes: { [key in RoleEnum]: string } = {
   [RoleEnum.ADMIN]: '/dashboard/admin',
 };
 
+// Mapping prefix to allowed roles
+const routeAccessMap: { [key: string]: RoleEnum[] } = {
+  '/dashboard/admin': [RoleEnum.ADMIN],
+  '/dashboard/developer': [RoleEnum.DEVELOPER, RoleEnum.ADMIN],
+  '/dashboard/designer': [RoleEnum.DESIGNER, RoleEnum.ADMIN],
+  '/dashboard/product-manager': [RoleEnum.PRODUCT_MANAGER, RoleEnum.ADMIN],
+  '/dashboard/devops': [RoleEnum.DEVOPS, RoleEnum.ADMIN],
+  '/dashboard/sales': [RoleEnum.SALES, RoleEnum.ADMIN],
+  '/dashboard/marketing': [RoleEnum.MARKETING, RoleEnum.ADMIN],
+  '/my-page/user': [RoleEnum.USER],
+  '/my-page/customer': [RoleEnum.CUSTOMER],
+};
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const response = NextResponse.next();
+  const token = request.cookies.get('token')?.value;
+  const refreshToken = request.cookies.get('refreshToken')?.value;
 
-  // Skip auth check for public routes
+  // Public route, skip protection
   const isPublic = PUBLIC_ROUTES.some(route =>
     route === '/' ? pathname === '/' : pathname.startsWith(route)
   );
-  if (isPublic) {
-    return NextResponse.next();
+  if (isPublic) return response;
+
+  // Decode token if exists
+  let decoded: DecodedToken | null = null;
+  if (token) {
+    decoded = decodeToken(token);
   }
 
-  // Protected routes logic
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/my-page') || pathname.startsWith('/profile')) {
-    const isAuth = await isAuthenticated();
-    if (!isAuth) {
-      const newToken = await refreshAccessToken();
-      if (!newToken) {
+  // Refresh token if invalid or expired
+  if (!decoded && refreshToken) {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!res.ok) {
         return NextResponse.redirect(new URL('/auth/login', request.url));
       }
-    }
 
-    const token = await getTokenFromCookies();
-    const decoded = token ? decodeToken(token) : null;
-    if (!decoded || !decoded.activeRole) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
-    }
+      const data = await res.json();
+      const newAccessToken = data.data.accessToken;
+      const newRefreshToken = data.data.refreshToken;
 
-    const userRole = decoded.activeRole;
-    const expectedRoute = roleBasedRoutes[userRole] || '/';
+      decoded = decodeToken(newAccessToken);
+      if (!decoded) return NextResponse.redirect(new URL('/auth/login', request.url));
 
-    // Role-based redirects
-    if (
-      expectedRoute &&
-      !pathname.startsWith(expectedRoute) &&
-      !pathname.startsWith(`/dashboard/${userRole}/profile`) &&
-      !pathname.startsWith('/customer/profile')
-    ) {
-      return NextResponse.redirect(new URL(expectedRoute, request.url));
-    }
+      // Set new cookies
+      response.cookies.set('token', newAccessToken, {
+        path: '/',
+        maxAge: 15 * 60,
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      });
 
-    // Dashboard access
-    if (pathname.startsWith('/dashboard')) {
-      const role = pathname.split('/')[2] || '';
-      if (role && role !== userRole && userRole !== RoleEnum.ADMIN && userRole !== RoleEnum.USER) {
-        return NextResponse.redirect(new URL(expectedRoute, request.url));
+      if (newRefreshToken) {
+        response.cookies.set('refreshToken', newRefreshToken, {
+          path: '/',
+          maxAge: 30 * 24 * 60 * 60,
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        });
       }
-    }
-
-    // my-page or customer/profile access
-    if (
-      (pathname.startsWith('/my-page') || pathname.startsWith('/customer/profile')) &&
-      ![RoleEnum.CUSTOMER, RoleEnum.ADMIN].includes(userRole)
-    ) {
-      return NextResponse.redirect(new URL(expectedRoute, request.url));
-    }
-
-    // Customer specific redirect
-    if (pathname.startsWith('/dashboard/customer') && userRole === RoleEnum.CUSTOMER) {
-      return NextResponse.redirect(new URL('/my-page/customer', request.url));
-    }
-
-    // Prevent USER from dashboard
-    if (pathname.startsWith('/dashboard') && userRole === RoleEnum.USER) {
-      return NextResponse.redirect(new URL('/', request.url));
+    } catch (e) {
+      console.error('Failed to refresh token in middleware', e);
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   }
 
-  return NextResponse.next();
+  // Still no valid token
+  if (!decoded) {
+    return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+
+  const role = decoded.activeRole;
+  const expectedRoute = roleBasedRoutes[role] || '/';
+
+  // Role-specific access control
+  for (const [prefix, allowedRoles] of Object.entries(routeAccessMap)) {
+    if (pathname.startsWith(prefix) && !allowedRoles.includes(role)) {
+      return NextResponse.redirect(new URL(expectedRoute, request.url));
+    }
+  }
+
+  return response;
 }
 
 export const config = {

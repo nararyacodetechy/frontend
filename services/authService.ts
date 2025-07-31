@@ -45,6 +45,23 @@ export const verifyEmail = async (token: string) => {
   return res.json();
 };
 
+export const resendVerification = async (email: string) => {
+  const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to resend verification email');
+  }
+
+  return await response.json();
+};
+
 export function loginWithGoogle() {  
   window.location.href = `${API_BASE_URL}/auth/google?prompt=select_account`;
 }

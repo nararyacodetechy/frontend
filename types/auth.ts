@@ -39,7 +39,6 @@ export interface AuthContextType {
   login: (user: Users) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
-  switchRole: (role: RoleEnum) => void;
 }
 
 export interface DecodedToken {

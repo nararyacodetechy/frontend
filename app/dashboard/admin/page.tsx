@@ -23,7 +23,7 @@ export default function AdminDashboard() {
   
 
   return (
-    <div className="bg-white p-6 rounded shadow">
+    <div className="bg-white">
       <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
       <p>This is the dashboard for Admins. Manage all aspects of the system here.</p>
     </div>

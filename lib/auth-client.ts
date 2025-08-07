@@ -14,9 +14,6 @@ export async function getTokenFromCookies(): Promise<string | null> {
     const token = tokenCookie ? tokenCookie.split('=')[1] : null;
     if (token && token.includes('.')) {
       return token;
-    }
-    if (!token) {
-      console.error('No token cookie found');
     } else {
       console.error('Invalid token format: token is malformed');
     }

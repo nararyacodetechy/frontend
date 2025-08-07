@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
 import { getTokenFromCookies } from '@/lib/auth-client';
-import { fetchMyProfile } from '@/services/profileService';
+import { fetchMyProfile } from '@/services/accountService';
 
 interface Profile {
   id: string;
@@ -15,7 +15,7 @@ interface Profile {
   activeRole: string;
 }
 
-export default function ProductManagerProfilePage() {
+export default function DevOpsProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -46,14 +46,14 @@ export default function ProductManagerProfilePage() {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-semibold text-teal-600 mb-4">Product Manager Profile</h2>
+      <h2 className="text-2xl font-semibold text-orange-600 mb-4">DevOps Profile</h2>
       {error && <p className="text-red-600 mb-4">{error}</p>}
       <div className="space-y-2">
         <p><strong>Name:</strong> {profile.fullName}</p>
         <p><strong>Email:</strong> {profile.email}</p>
         <p><strong>Roles:</strong> {profile.roles.join(', ')}</p>
         <p><strong>Active Role:</strong> {profile.activeRole}</p>
-        <p className="text-gray-600">Oversee product development and strategy here.</p>
+        <p className="text-gray-600">Manage deployments and infrastructure here.</p>
       </div>
     </div>
   );

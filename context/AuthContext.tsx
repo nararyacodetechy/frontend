@@ -10,7 +10,7 @@ import {
 import type { AuthContextType, Users } from '@/types/auth';
 import { PUBLIC_ROUTES } from '@/lib/public-routes';
 import { RoleEnum } from '@/types/role';
-import { fetchMyProfile } from '@/services/profileService';
+import { fetchMyProfile } from '@/services/accountService';
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -19,12 +19,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<Users | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const switchRole = (role: RoleEnum) => {
-    if (user?.roles.includes(role)) {
-      setUser((prev) => prev ? { ...prev, activeRole: role } : null);
-    }
-  };  
 
   // login and logout functions
   const login = async (userData: Users) => {
@@ -95,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, setUser, login, logout, loading, switchRole }}
+      value={{ user, setUser, login, logout, loading }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,4 +1,4 @@
-// services/profileService.ts
+// services/accountService.ts
 import { getTokenFromCookies } from '@/lib/auth-client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL!;

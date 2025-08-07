@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
 import { getTokenFromCookies } from '@/lib/auth-client';
-import { fetchMyProfile } from '@/services/profileService';
+import { fetchMyProfile } from '@/services/accountService';
 
 interface Profile {
   id: string;
@@ -13,9 +13,10 @@ interface Profile {
   fullName: string;
   roles: string[];
   activeRole: string;
+  tasks?: string[];
 }
 
-export default function DesignerProfilePage() {
+export default function DeveloperProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -46,14 +47,17 @@ export default function DesignerProfilePage() {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-semibold text-pink-600 mb-4">Designer Profile</h2>
+      <h2 className="text-2xl font-semibold text-indigo-600 mb-4">Developer Profile</h2>
       {error && <p className="text-red-600 mb-4">{error}</p>}
       <div className="space-y-2">
         <p><strong>Name:</strong> {profile.fullName}</p>
         <p><strong>Email:</strong> {profile.email}</p>
         <p><strong>Roles:</strong> {profile.roles.join(', ')}</p>
         <p><strong>Active Role:</strong> {profile.activeRole}</p>
-        <p className="text-gray-600">Manage your design projects here.</p>
+        <div>
+          <h3 className="text-lg font-medium text-indigo-600">Your Tasks</h3>
+          <p>{profile.tasks?.length ? profile.tasks.join(', ') : 'No tasks assigned.'}</p>
+        </div>
       </div>
     </div>
   );

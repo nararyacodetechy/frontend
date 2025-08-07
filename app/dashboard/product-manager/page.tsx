@@ -18,7 +18,7 @@ export default function ProductManagerDashboard() {
   }
 
   return (
-    <div className="bg-white p-6 rounded shadow">
+    <div className="bg-white">
       <h2 className="text-2xl font-bold mb-4">Product Manager Dashboard</h2>
       <p>This is the dashboard for Product Managers. Oversee product development and strategy here.</p>
     </div>

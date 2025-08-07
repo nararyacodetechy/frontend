@@ -33,7 +33,7 @@ export function isUser(role?: Role) {
 export function getDashboardPathByRole(role: Role) {
   switch (role) {
     case RoleEnum.USER:
-      return '/';
+      return '/my-page/user';
     case RoleEnum.CUSTOMER:
       return '/my-page/customer';
     case RoleEnum.ADMIN:

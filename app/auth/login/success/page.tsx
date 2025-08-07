@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getTokenFromCookies } from '@/lib/auth-client';
-import { fetchMyProfile } from '@/services/profileService';
+import { fetchMyProfile } from '@/services/accountService';
 
 export default function LoginSuccessPage() {
   const router = useRouter();

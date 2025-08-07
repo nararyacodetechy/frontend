@@ -4,10 +4,18 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
-import { Profile } from '@/types/user';
-import { fetchMyProfile } from '@/services/profileService';
+import { getTokenFromCookies } from '@/lib/auth-client';
+import { fetchMyProfile } from '@/services/accountService';
 
-export default function AdminProfilePage() {
+interface Profile {
+  id: string;
+  email: string;
+  fullName: string;
+  roles: string[];
+  activeRole: string;
+}
+
+export default function MarketingProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -38,17 +46,14 @@ export default function AdminProfilePage() {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-semibold text-red-600 mb-4">Admin Profile</h2>
+      <h2 className="text-2xl font-semibold text-purple-600 mb-4">Marketing Profile</h2>
       {error && <p className="text-red-600 mb-4">{error}</p>}
       <div className="space-y-2">
         <p><strong>Name:</strong> {profile.fullName}</p>
         <p><strong>Email:</strong> {profile.email}</p>
         <p><strong>Roles:</strong> {profile.roles.join(', ')}</p>
         <p><strong>Active Role:</strong> {profile.activeRole}</p>
-        <div>
-          <h3 className="text-lg font-medium text-red-600">Admin Privileges</h3>
-          <p>{profile.adminPrivileges?.join(', ') || 'No privileges assigned.'}</p>
-        </div>
+        <p className="text-gray-600">Manage your campaigns and promotions here.</p>
       </div>
     </div>
   );

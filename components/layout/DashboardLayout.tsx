@@ -5,91 +5,35 @@ import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-
-// Define nav link type with dynamic href
-type NavLink = {
-  label: string;
-  getHref: (role: RoleEnum) => string;
-};
-
-// Config per role
-const NAV_CONFIG: Partial<Record<RoleEnum, NavLink[]>> = {
-    [RoleEnum.ADMIN]: [
-      { label: 'Dashboard', getHref: () => '/dashboard/admin' },
-    ],
-    [RoleEnum.SALES]: [
-      { label: 'Dashboard', getHref: () => '/dashboard/sales' },
-      { label: 'Projects', getHref: () => '/dashboard/sales/Projects' },
-      { label: 'Task Management', getHref: () => '/dashboard/sales/task-management' },
-      { label: 'Schedule', getHref: () => '/dashboard/sales/schedule' },
-      { label: 'Team & Role', getHref: () => '/dashboard/sales/team-role' },
-      { label: 'Docs', getHref: () => '/dashboard/sales/docs' },
-      { label: 'My Wallet', getHref: () => '/dashboard/sales/my-wallet' },
-      { label: 'Notification', getHref: () => '/dashboard/sales/notification' },
-      { label: 'Profile', getHref: () => '/dashboard/sales/profile' },
-    ],
-    [RoleEnum.MARKETING]: [
-      { label: 'Dashboard', getHref: () => '/dashboard/marketing' },
-      { label: 'Dashboard', getHref: () => '/dashboard/marketing/projects' },
-      { label: 'Task Management', getHref: () => '/dashboard/marketing/task-management' },
-      { label: 'Schedule', getHref: () => '/dashboard/marketing/schedule' },
-      { label: 'Team & Role', getHref: () => '/dashboard/marketing/team-role' },
-      { label: 'Docs', getHref: () => '/dashboard/marketing/docs' },
-      { label: 'My Wallet', getHref: () => '/dashboard/marketing/my-wallet' },
-      { label: 'Notification', getHref: () => '/dashboard/marketing/notification' },
-      { label: 'Profile', getHref: () => '/dashboard/marketing/profile' },
-    ],
-    [RoleEnum.PRODUCT_MANAGER]: [
-      { label: 'Dashboard', getHref: () => '/dashboard/product-manager' },
-      { label: 'Projects', getHref: () => '/dashboard/product-manager/projects' },
-      { label: 'Task Management', getHref: () => '/dashboard/product-manager/task-management' },
-      { label: 'Schedule', getHref: () => '/dashboard/product-manager/schedule' },
-      { label: 'Team & Role', getHref: () => '/dashboard/product-manager/team-role' },
-      { label: 'Docs', getHref: () => '/dashboard/product-manager/docs' },
-      { label: 'My Wallet', getHref: () => '/dashboard/product-manager/my-wallet' },
-      { label: 'Notification', getHref: () => '/dashboard/product-manager/notification' },
-      { label: 'Profile', getHref: () => '/dashboard/product-manager/profile' },
-    ],
-    [RoleEnum.DEVELOPER]: [
-      { label: 'Dashboard', getHref: () => '/dashboard/developer' },
-      { label: 'Projects', getHref: () => '/dashboard/developer/projects' },
-      { label: 'Task Management', getHref: () => '/dashboard/developer/task-management' },
-      { label: 'Schedule', getHref: () => '/dashboard/developer/schedule' },
-      { label: 'Team & Role', getHref: () => '/dashboard/developer/team-role' },
-      { label: 'Docs', getHref: () => '/dashboard/developer/docs' },
-      { label: 'My Wallet', getHref: () => '/dashboard/developer/my-wallet' },
-      { label: 'Notification', getHref: () => '/dashboard/developer/notification' },
-      { label: 'Profile', getHref: () => '/dashboard/developer/profile' },
-    ],
-    [RoleEnum.DEVOPS]: [
-      { label: 'Dashboard', getHref: () => '/dashboard/devops' },
-      { label: 'Projects', getHref: () => '/dashboard/devops/projects' },
-      { label: 'Task Management', getHref: () => '/dashboard/devops/task-management' },
-      { label: 'Schedule', getHref: () => '/dashboard/devops/schedule' },
-      { label: 'Team & Role', getHref: () => '/dashboard/devops/team-role' },
-      { label: 'Docs', getHref: () => '/dashboard/devops/docs' },
-      { label: 'My Wallet', getHref: () => '/dashboard/devops/my-wallet' },
-      { label: 'Notification', getHref: () => '/dashboard/devops/notification' },
-      { label: 'Profile', getHref: () => '/dashboard/devops/profile' },
-    ],
-    [RoleEnum.DESIGNER]: [
-      { label: 'Dashboard', getHref: () => '/dashboard/designer' },
-      { label: 'Projects', getHref: () => '/dashboard/designer/projects' },
-      { label: 'Task Management', getHref: () => '/dashboard/designer/task-management' },
-      { label: 'Schedule', getHref: () => '/dashboard/designer/schedule' },
-      { label: 'Team & Role', getHref: () => '/dashboard/designer/team-role' },
-      { label: 'Docs', getHref: () => '/dashboard/designer/docs' },
-      { label: 'My Wallet', getHref: () => '/dashboard/designer/my-wallet' },
-      { label: 'Notification', getHref: () => '/dashboard/designer/notification' },
-      { label: 'Profile', getHref: () => '/dashboard/designer/profile' },
-    ],
-};
+import LoadingRing from '@/components/general/LoadingRing';
+import { NAV_CONFIG } from '@/lib/nav-dashboard';
+import { useTheme } from 'next-themes';
+import { Moon, Sun, Bell, Globe, User } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, logout, loading, switchRole } = useAuth();
+  const { user, logout, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isReady, setIsReady] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Listen for pathname changes
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+
+    setIsNavigating(true);
+    timeout = setTimeout(() => {
+      setIsNavigating(false);
+    }, 300); // arbitrary delay to hide loader once path changes
+
+    return () => clearTimeout(timeout);
+  }, [pathname]);
 
   useEffect(() => {
     if (loading) return;
@@ -106,6 +50,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [loading, user, pathname, router]);
 
+
   if (loading || !isReady || !user) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -113,34 +58,27 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const matchedRole = Object.values(RoleEnum).find(role =>
     pathname?.startsWith(`/dashboard/${role.toLowerCase()}`)
   );
-
   const currentRole = matchedRole ?? user.activeRole;
-
   const navLinks = (NAV_CONFIG[currentRole] ?? []).map(link => ({
     label: link.label,
     href: link.getHref(user.activeRole),
   }));
 
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newRole = e.target.value as RoleEnum;
-    if (user.roles.includes(newRole)) {
-      switchRole(newRole);
-    }
-  };
-
   return (
     <div className="min-h-screen flex">
+      {isNavigating && <LoadingRing />}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 text-white p-4">
-        <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+      <aside className="fixed top-0 left-0 w-64 h-screen bg-white text-black p-4 z-20 border border-r border-gray-300">
+        <h2 className="text-2xl font-bold mb-4">Mokami</h2>
         <nav>
           <ul className="space-y-2">
             {navLinks.map(link => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className={`block p-2 rounded hover:bg-gray-700 ${
-                    pathname === link.href ? 'bg-gray-700 font-semibold' : ''
+                  className={`block p-2 rounded hover:bg-gray-100 ${
+                    pathname === link.href ? 'bg-gray-100 font-semibold' : ''
                   }`}
                 >
                   {link.label}
@@ -149,22 +87,66 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             ))}
           </ul>
         </nav>
-
-        <button
-          onClick={logout}
-          className="mt-4 w-full bg-red-600 text-white py-2 rounded hover:bg-red-700"
-        >
-          Logout
-        </button>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-gray-100 text-black">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold">Welcome, {user.fullName}</h1>
-          <p className="text-gray-600">Role: {user.activeRole}</p>
+      <main className="ml-64 min-h-screen w-full bg-gray-100 text-black">
+        {/* Fixed Header */}
+        <header className="fixed top-0 left-64 right-0 z-10 flex justify-between items-center px-6 py-4 border-b border-gray-300 bg-white dark:bg-gray-900">
+          <p className="text-gray-600 dark:text-gray-300">As {user.activeRole}</p>
+
+          <div className="flex items-center gap-4">
+            {/* Theme toggle */}
+            {mounted && (
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            )}
+
+            {/* Translate dropdown */}
+            <div className="relative group">
+              <button className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
+                <Globe className="w-5 h-5" />
+              </button>
+              <ul className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-md hidden group-hover:block">
+                <li><button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">EN</button></li>
+                <li><button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">ID</button></li>
+              </ul>
+            </div>
+
+            {/* Notification icon */}
+            <button className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping" />
+            </button>
+
+            {/* User profile dropdown */}
+            <div className="relative group">
+              <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                <User className="w-5 h-5" />
+              </button>
+              <ul className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-md hidden group-hover:block">
+                <li className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{user.fullName}</li>
+                <li>
+                  <button
+                    onClick={logout}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Logout
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
         </header>
-        {children}
+
+        {/* Main page content below header */}
+        <div className="pt-[90px] pb-6 px-6 min-h-screen bg-white">
+          {children}
+        </div>
       </main>
     </div>
   );

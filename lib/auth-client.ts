@@ -15,7 +15,7 @@ export async function getTokenFromCookies(): Promise<string | null> {
     if (token && token.includes('.')) {
       return token;
     } else {
-      console.error('Invalid token format: token is malformed');
+      console.log('No token Valid, User not login');
     }
     // Wait 100ms before retrying
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -37,7 +37,7 @@ export async function getRefreshTokenFromCookies(): Promise<string | null> {
 export function decodeToken(token: string): DecodedToken | null {
   try {
     if (!token || !token.includes('.')) {
-      console.error('Invalid token format: token is empty or malformed');
+      console.log('No token Valid, User not login');
       return null;
     }
     const decoded = jwtDecode<DecodedToken>(token);

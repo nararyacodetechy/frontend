@@ -7,8 +7,10 @@ import { Order, Feature } from '@/types/order'
 import CustomAlert from '@/components/general/CustomAlert'
 import InfoClient from '@/components/order/InfoClient'
 import InfoOrder from '@/components/order/InfoOrder'
+import Onboarding from '@/components/order/Onboarding'
 import AddFeature from '@/components/order/AddFeature'
 import ListFeatures from '@/components/order/ListFeatures'
+import PricingAndPayment from '@/components/order/PricingAndPayment'
 
 export default function OrderDetailPage() {
     const { id } = useParams()
@@ -359,6 +361,7 @@ export default function OrderDetailPage() {
             <div className="space-y-6">
                 <InfoClient data={data} />
                 <InfoOrder data={data} />
+                <Onboarding data={data} setData={setData} setAlertConfig={setAlertConfig} />
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 flex flex-col gap-4">
                     <AddFeature 
                         newFeature={newFeature}
@@ -390,6 +393,9 @@ export default function OrderDetailPage() {
                         setAlertConfig={setAlertConfig}
                     />
                 </div>
+                {data.onboarding?.status === 'completed' && (
+                    <PricingAndPayment data={data} setData={setData} setAlertConfig={setAlertConfig} />
+                )}
             </div>
         </>
     )

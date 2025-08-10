@@ -130,9 +130,9 @@ export default function InfoOrder({ data }: InfoOrderProps) {
                         <h3 className="text-sm font-medium text-gray-700">Pembayaran</h3>
                         <div className="space-y-2 text-sm">
                             <p><strong>Metode:</strong> {data.paymentMethod || 'Tidak tersedia'}</p>
-                            <p><strong>Total Harga:</strong> Rp {data.totalPrice?.toLocaleString() || 'Tidak tersedia'}</p>
+                            <p><strong>Total Harga:</strong> Rp {data.budgetPrice?.toLocaleString() || 'Tidak tersedia'}</p>
                             {data.paymentProof && (
-                                <p>
+                                <div>
                                     <strong>Bukti Pembayaran:</strong>
                                     <div className="flex items-center gap-2 mt-2">
                                         <button
@@ -150,7 +150,7 @@ export default function InfoOrder({ data }: InfoOrderProps) {
                                             <Download size={14} /> Unduh
                                         </button>
                                     </div>
-                                </p>
+                                </div>
                             )}
                         </div>
                     </div>

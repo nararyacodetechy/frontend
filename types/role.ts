@@ -1,11 +1,3 @@
-export interface Users {
-    id: string;
-    email: string;
-    fullName: string | null;
-    roles: RoleEnum[];
-    activeRole: RoleEnum;
-}
-
 export enum RoleEnum {
     USER = 'user',
     CUSTOMER = 'customer',

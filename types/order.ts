@@ -1,31 +1,6 @@
 // types/order.ts
-
-export type RequirementItem = {
-    id: string
-    title: string
-    status?: 'pending' | 'approved' // tambahkan ini agar sesuai dummy
-}
-
-export type TaskItem = {
-    id: string
-    title: string
-    status: 'todo' | 'in-progress' | 'done'
-    deadline?: string
-}
-
-export type Feature = {
-    id: string
-    name: string
-    function: string
-    price: number
-    duration: string
-    approvalStatus: 'draft' | 'waiting' | 'approved'
-    deletionRequest?: boolean
-    requirements?: RequirementItem[]
-    isMarkedForDiscussion?: boolean
-    discussionNote?: string
-    tasks?: TaskItem[]
-}
+import { Onboarding } from '@/types/onboarding'
+import { Feature, RequirementItem  } from '@/types/feature'
 
 export type Order = {
     id: string
@@ -49,11 +24,28 @@ export type Order = {
     createdAt?: string
     paymentMethod?: string
     paymentProof?: string
-    totalPrice?: number
+    budgetPrice?: number
     designPreference?: {
         color: string
         style: string
     }
     features?: Feature[]
+    totalPriceFeatures?: number;
+    onboarding?: Onboarding
+    pricingProposals?: PricingProposal[]
+    totalPriceFinal?: number;
+    pricingStatus?: 'negotiating' | 'confirmed'
+    paymentTerms?: 'full' | 'installments' | 'milestones'
+    paymentStatus?: 'pending' | 'paid'
 }
   
+export type PricingProposal = {
+    id: string
+    amount: number
+    discount: number
+    taxRate: number
+    commissionRate: number
+    notes: string
+    proposedBy: 'PM' | 'Client'
+    createdAt: string
+}

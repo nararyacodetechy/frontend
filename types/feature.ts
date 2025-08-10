@@ -1,3 +1,6 @@
+// types/feature.ts
+import { TaskItem } from '@/types/task'
+
 export type Feature = {
     id: string
     name: string
@@ -10,10 +13,12 @@ export type Feature = {
     isMarkedForDiscussion?: boolean
     discussionNote?: string
     isDiscussionResolved: false,
+    discussionStatus: 'open' | 'close'
     tasks?: TaskItem[]
 }
 
 export type RequirementItem = {
     id: string
     title: string
+    status?: 'pending' | 'approved'
 }

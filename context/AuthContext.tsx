@@ -7,7 +7,8 @@ import {
   decodeToken,
   getRefreshTokenFromCookies,
 } from '@/lib/auth-client';
-import type { AuthContextType, Users } from '@/types/auth';
+import type { AuthContextType } from '@/types/auth';
+import type { Users } from '@/types/user';
 import { PUBLIC_ROUTES } from '@/lib/public-routes';
 import { RoleEnum } from '@/types/role';
 import { fetchMyProfile } from '@/services/accountService';

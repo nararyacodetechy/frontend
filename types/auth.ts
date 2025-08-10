@@ -1,14 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
 import { RoleEnum } from './role';
-
-export interface Users {
-  id: string;
-  email: string;
-  fullName: string | null;
-  roles: RoleEnum[];
-  activeRole: RoleEnum;
-  isEmailVerified: boolean;
-}
+import { Users } from './user';
 
 export interface RegisterPayload {
   fullName: string;

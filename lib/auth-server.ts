@@ -9,7 +9,7 @@ export async function getTokenFromCookies(): Promise<string | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
   if (!token || !token.includes('.')) {
-    console.error('Invalid token format: token is empty or malformed');
+    console.error('No token Valid, User not login');
     return null;
   }
   return token;
@@ -28,7 +28,7 @@ export async function getRefreshTokenFromCookies(): Promise<string | null> {
 export function decodeToken(token: string): DecodedToken | null {
   try {
     if (!token || !token.includes('.')) {
-      console.error('Invalid token format: token is empty or malformed');
+      console.error('No token Valid, User not login');
       return null;
     }
     const decoded = jwtDecode<DecodedToken>(token);

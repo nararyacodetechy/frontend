@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
-import { getTokenFromCookies } from '@/lib/auth-client';
 import { fetchMyProfile } from '@/services/accountService';
 
 interface Profile {

@@ -3,9 +3,17 @@ import { RoleEnum } from './role';
 import { Users } from './user';
 
 export interface RegisterPayload {
-  fullName: string;
   email: string;
   password: string;
+  profile: {
+    fullName: string;
+    username?: string;
+    nik?: string;
+    address?: string;
+    phone?: string;
+    company?: string;
+    imageProfile?: string;
+  };
   roles?: RoleEnum[];
 }
 

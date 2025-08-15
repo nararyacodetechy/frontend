@@ -5,13 +5,13 @@ import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
 import { RoleEnum } from '@/types/role';
 
 interface RegisterFormProps {
-  onSubmit: (formData: { email: string; password: string; fullName: string; roles: RoleEnum[] }) => void;
+  onSubmit: (formData: { email: string; password: string; roles: RoleEnum[] }) => void;
   error: string;
   message: string;
 }
 
 export default function RegisterForm({ onSubmit, error, message }: RegisterFormProps) {
-  const [form, setForm] = useState({ email: '', password: '', fullName: '', roles: [RoleEnum.USER] });
+  const [form, setForm] = useState({ email: '', password: '', roles: [RoleEnum.USER] });
   const [showManualForm, setShowManualForm] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,17 +42,6 @@ export default function RegisterForm({ onSubmit, error, message }: RegisterFormP
 
       {showManualForm && (
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Full Name</label>
-            <input
-              type="text"
-              placeholder="Enter your full name"
-              className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={form.fullName}
-              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              required
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input

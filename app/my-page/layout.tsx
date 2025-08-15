@@ -6,7 +6,7 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
   return (
     <AuthProvider>
       <Header />
-      <main className="pt-24 min-h-screen w-full">{children}</main>
+      <main className="pt-15 min-h-screen w-full">{children}</main>
       <Footer />
     </AuthProvider>
   )

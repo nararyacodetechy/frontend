@@ -3,67 +3,79 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { getTokenFromCookies } from '@/lib/auth-client';
 import { fetchMyProfile } from '@/services/accountService';
+import { setTokens } from '@/lib/auth-client';
+import { RoleEnum } from '@/types/role';
 
-export default function LoginSuccessPage() {
+const roleBasedRoutes: { [key in RoleEnum]: string } = {
+  [RoleEnum.USER]: '/my-page/user',
+  [RoleEnum.CUSTOMER]: '/my-page/customer',
+  [RoleEnum.PRODUCT_MANAGER]: '/dashboard/product-manager',
+  [RoleEnum.DESIGNER]: '/dashboard/designer',
+  [RoleEnum.DEVELOPER]: '/dashboard/developer',
+  [RoleEnum.DEVOPS]: '/dashboard/devops',
+  [RoleEnum.SALES]: '/dashboard/sales',
+  [RoleEnum.MARKETING]: '/dashboard/marketing',
+  [RoleEnum.ADMIN]: '/dashboard/admin',
+};
+
+export default function LoginSuccess() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, loading } = useAuth();
+  const { setUser } = useAuth();
 
   useEffect(() => {
-    const initialize = async () => {
-      const token = searchParams.get('token');
-      const refreshTokenFromQuery = searchParams.get('refreshToken');
+    const handleLoginSuccess = async () => {
+      const accessToken = searchParams.get('token');       // ambil dari URL
+      if (!accessToken) {
+        router.push('/auth/login?error=missing-tokens');
+        return;
+      }
 
-      if (token) {
-        const isSecure = location.protocol === 'https:';
-        // Set token & refreshToken to cookie
-        document.cookie = `token=${token}; path=/; max-age=${24 * 60 * 60}; ${isSecure ? 'secure;' : ''} samesite=lax`;
-        if (refreshTokenFromQuery) {
-          document.cookie = `refreshToken=${refreshTokenFromQuery}; path=/; max-age=${7 * 24 * 60 * 60}; ${isSecure ? 'secure;' : ''} samesite=lax`;
-        }
+      // 1️⃣ Simpan access token di cookie
+      setTokens(accessToken);
 
-        // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname);
+      // 2️⃣ Fetch profile pakai token langsung
+      try {
+        const response = await fetchMyProfile(accessToken); 
+        if (!response?.data?.user) throw new Error('No profile data');
 
-        try {
-          // Ambil profile dari service
-          const userData = await fetchMyProfile();
+        const user = response.data.user;
+        setUser({
+          id: user.id,
+          email: user.email,
+          roles: user.roles?.map((role: string) => role as RoleEnum) || [],
+          activeRole: (user.activeRole as RoleEnum) || RoleEnum.USER,
+          isEmailVerified: user.isEmailVerified ?? false,
+          profile: user.profile
+            ? {
+                id: user.profile.id,
+                userId: user.profile.userId,
+                fullName: user.profile.fullName,
+                username: user.profile.username || null,
+                nik: user.profile.nik || null,
+                address: user.profile.address || null,
+                phone: user.profile.phone || null,
+                company: user.profile.company || null,
+                imageProfile: user.profile.imageProfile || null,
+              }
+            : undefined,
+        });
 
-          await login(userData);
-
-          // Tunggu AuthContext ready
-          const waitForAuthContext = () =>
-            new Promise((resolve) => {
-              const interval = setInterval(() => {
-                if (!loading) {
-                  clearInterval(interval);
-                  resolve(true);
-                }
-              }, 100);
-            });
-
-          await waitForAuthContext();
-
-          // Redirect sesuai role
-          let layoutPath = `/dashboard/${userData.activeRole}`;
-          if (userData.activeRole === 'user' || userData.activeRole === 'customer') {
-            layoutPath = `/my-page/${userData.activeRole}`;
-          }
-
-          router.push(layoutPath);
-        } catch (err) {
-          console.error('Failed to fetch user', err);
-          router.push('/auth/login');
-        }
-      } else {
-        router.push('/auth/login');
+        const redirectTo = roleBasedRoutes[user.activeRole as RoleEnum] || '/my-page/user';
+        router.push(redirectTo);
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+        router.push('/auth/login?error=profile-fetch-failed');
       }
     };
 
-    initialize();
-  }, [router, searchParams, login, loading]);
+    handleLoginSuccess();
+  }, [router, searchParams, setUser]);
 
-  return <div className="min-h-screen flex items-center justify-center">Redirecting...</div>;
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <p>Redirecting to Your Page, Please Wait...</p>
+    </div>
+  );
 }

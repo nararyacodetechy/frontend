@@ -1,14 +1,22 @@
-export type Meeting = {
-    id: string
-    date: string
-    time: string
-    link: string
-    notes: string
-    isAdHoc?: boolean
-}
+// types/onboarding.ts
 
 export type Onboarding = {
+    id: string;
+    orderId: string;
     status: 'initial' | 'meeting_scheduled' | 'analysis_complete' | 'completed'
-    meetings?: Meeting[]
-    analysisNotes?: string
+    analysisNotes?: string;
+    createdAt: string;
+    updatedAt: string;
+    meetings: OnboardingMeeting[];
+}
+  
+export interface OnboardingMeeting {
+    id: string;
+    onboardingId: string;
+    date: string;
+    time: string;
+    link?: string;
+    notes?: string;
+    isAdHoc?: boolean
+    createdAt: string;
 }

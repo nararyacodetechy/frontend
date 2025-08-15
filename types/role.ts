@@ -1,3 +1,4 @@
+// types/role.ts
 export enum RoleEnum {
     USER = 'user',
     CUSTOMER = 'customer',
@@ -8,4 +9,4 @@ export enum RoleEnum {
     DEVELOPER = 'developer',
     DEVOPS = 'devops',
     ADMIN = 'admin',
-}
+  }

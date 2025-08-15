@@ -1,6 +1,7 @@
 // types/order.ts
 import { Onboarding } from '@/types/onboarding'
-import { Feature, RequirementItem  } from '@/types/feature'
+import { Feature  } from '@/types/feature'
+import { PricingProposal } from './pricing-proposal'
 
 export type Order = {
     id: string
@@ -38,14 +39,9 @@ export type Order = {
     paymentTerms?: 'full' | 'installments' | 'milestones'
     paymentStatus?: 'pending' | 'paid'
 }
-  
-export type PricingProposal = {
-    id: string
-    amount: number
-    discount: number
-    taxRate: number
-    commissionRate: number
-    notes: string
-    proposedBy: 'PM' | 'Client'
-    createdAt: string
-}
+
+export interface ProductManagerResponse<T> {
+    status: 'success' | 'error';
+    message: string;
+    data?: T;
+  }

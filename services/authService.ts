@@ -66,28 +66,26 @@ export function loginWithGoogle() {
   window.location.href = `${API_BASE_URL}/auth/google?prompt=select_account`;
 }
 
-export const refreshToken = async (refreshToken: string): Promise<AuthResponse> => {
+export const refreshTokenApi = async (refreshToken: string): Promise<AuthResponse> => {
   const res = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
+    cache: 'no-store',
   });
 
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
-export const logout = async (refreshToken: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/auth/logout`, {
+export async function logout(refreshToken: string): Promise<void> {
+  await fetch(`${API_BASE_URL}/auth/logout`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
   });
-
-  if (!res.ok) throw new Error(await res.text());
-};
+  document.cookie = 'token=; path=/; max-age=0';
+  document.cookie = 'refreshToken=; path=/; max-age=0';
+}
 
   

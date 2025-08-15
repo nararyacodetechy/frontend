@@ -1,3 +1,4 @@
+// components/layout/DashboardLayout.tsx
 'use client';
 
 import { useEffect, useState, ReactNode } from 'react';
@@ -18,20 +19,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [isNavigating, setIsNavigating] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Listen for pathname changes
   useEffect(() => {
     let timeout: NodeJS.Timeout;
-
     setIsNavigating(true);
     timeout = setTimeout(() => {
       setIsNavigating(false);
-    }, 300); // arbitrary delay to hide loader once path changes
-
+    }, 300);
     return () => clearTimeout(timeout);
   }, [pathname]);
 
@@ -50,7 +48,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [loading, user, pathname, router]);
 
-
   if (loading || !isReady || !user) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -68,7 +65,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex">
       {isNavigating && <LoadingRing />}
 
-      {/* Sidebar */}
       <aside className="fixed top-0 left-0 w-64 h-screen bg-white text-black p-4 z-20 border border-r border-gray-300">
         <h2 className="text-2xl font-bold mb-4">Mokami</h2>
         <nav>
@@ -89,14 +85,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="ml-64 min-h-screen w-full bg-gray-100 text-black">
-        {/* Fixed Header */}
         <header className="fixed top-0 left-64 right-0 z-10 flex justify-between items-center px-6 py-4 border-b border-gray-300 bg-white dark:bg-gray-900">
           <p className="text-gray-600 dark:text-gray-300">As {user.activeRole}</p>
 
           <div className="flex items-center gap-4">
-            {/* Theme toggle */}
             {mounted && (
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -106,7 +99,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </button>
             )}
 
-            {/* Translate dropdown */}
             <div className="relative group">
               <button className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">
                 <Globe className="w-5 h-5" />
@@ -117,19 +109,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </ul>
             </div>
 
-            {/* Notification icon */}
             <button className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 relative">
               <Bell className="w-5 h-5" />
               <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping" />
             </button>
 
-            {/* User profile dropdown */}
             <div className="relative group">
               <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
                 <User className="w-5 h-5" />
               </button>
               <ul className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-md hidden group-hover:block">
-                <li className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{user.fullName}</li>
+                <li className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{user.profile?.fullName || 'User'}</li>
                 <li>
                   <button
                     onClick={logout}
@@ -143,7 +133,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        {/* Main page content below header */}
         <div className="pt-[90px] pb-6 px-6 min-h-screen bg-white">
           {children}
         </div>

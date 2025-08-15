@@ -1,97 +1,64 @@
 'use client';
-
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, createContext, useContext } from 'react';
-import {
-  getTokenFromCookies,
-  decodeToken,
-  getRefreshTokenFromCookies,
-} from '@/lib/auth-client';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import type { AuthContextType } from '@/types/auth';
 import type { Users } from '@/types/user';
 import { PUBLIC_ROUTES } from '@/lib/public-routes';
-import { RoleEnum } from '@/types/role';
 import { fetchMyProfile } from '@/services/accountService';
+import { getTokenFromCookies, decodeToken, getRefreshTokenFromCookies } from '@/lib/auth-client';
+import { login as loginApi, logout as logoutApi } from '@/services/authService';
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
   const [user, setUser] = useState<Users | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
-  // login and logout functions
-  const login = async (userData: Users) => {
-    setUser(userData);
-    // optionally set cookies here if needed
-  };
+  const login = useCallback(async (payload: any) => {
+    const { user } = await loginApi(payload);
+    setUser(user);
+  }, []);
 
-  const logout = async () => {
-    // clear server session if needed, then clear client state
+  const logout = useCallback(async () => {
+    const refreshToken = await getRefreshTokenFromCookies(); // ← tambahkan await
+    if (refreshToken) await logoutApi(refreshToken);
     setUser(null);
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     router.push('/auth/login');
-  };
+  }, [router]);
 
-  useEffect(() => {
-    if (
-      PUBLIC_ROUTES.some((route) =>
-        route === '/' ? pathname === '/' : pathname.startsWith(route)
-      )
-    ) {
-      setLoading(false);
+  const loadUser = useCallback(async () => {
+    const token = await getTokenFromCookies(); // ← tambahkan await
+    if (!token) return;
+  
+    const decoded = decodeToken(token);
+    if (!decoded) {
+      logout();
       return;
     }
   
-    (async () => {
-      const token = await getTokenFromCookies();
+    try {
+      const profile = await fetchMyProfile();
+      setUser(profile);
+    } catch (err) {
+      console.error('Failed to load user profile:', err);
+      const refreshToken = await getRefreshTokenFromCookies(); // ← tambahkan await
+      if (!refreshToken) logout();
+      // TODO: refresh logic here
+    }
+  }, [logout]);
 
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-  
-      const decoded = decodeToken(token);
-
-      if (!decoded) {
-        router.push('/auth/login');
-        return;
-      }
-  
-      try {
-        const userData = await fetchMyProfile();
-        
-        if (!userData) throw new Error('No profile data');
-  
-        setUser({
-          id: userData.id,
-          fullName: userData.fullName,
-          email: userData.email,
-          roles: userData.roles || [],
-          activeRole: userData.activeRole,
-          isEmailVerified: userData.isEmailVerified ?? false,
-        });
-      } catch (err) {
-        console.error('Failed to load user profile', err);
-        const refreshToken = await getRefreshTokenFromCookies();
-
-        if (!refreshToken) {
-          router.push('/auth/login');
-          return;
-        }
-        // TODO: implement refresh logic here
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [pathname, router]);  
+  useEffect(() => {
+    if (PUBLIC_ROUTES.includes(pathname)) {
+      setLoading(false);
+      return;
+    }
+    loadUser().finally(() => setLoading(false));
+  }, [pathname, loadUser]);
 
   return (
-    <AuthContext.Provider
-      value={{ user, setUser, login, logout, loading }}
-    >
+    <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -99,6 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be inside AuthProvider');
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
   return ctx;
 };

@@ -11,7 +11,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleRegister = async (formData: { email: string; password: string; fullName: string; roles: RoleEnum[] }) => {
+  const handleRegister = async (formData: { email: string; password: string; roles: RoleEnum[] }) => {
     try {
       const response = await register(formData);
       setMessage('Registration successful! Please verify your email.');

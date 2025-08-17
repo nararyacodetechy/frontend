@@ -1,65 +1,64 @@
-// lib/auth-client.ts
-
 'use client';
 
 import { DecodedToken } from '@/types/auth';
 import { RoleEnum } from '@/types/role';
-import { jwtDecode } from 'jwt-decode';
 
-// auth-client.ts
-export function setTokens(accessToken: string) {
-  const isProd = process.env.NODE_ENV === 'production';
-  const secureFlag = isProd ? 'Secure; SameSite=Strict' : 'SameSite=Lax';
-  document.cookie = `token=${accessToken}; path=/; max-age=${15*60}; ${secureFlag}`;
-}
+/**
+ * NOTE:
+ * Karena access_token di-set sebagai HttpOnly cookie oleh backend,
+ * frontend TIDAK BISA membaca cookie tersebut via JS.
+ * Jadi fungsi-fungsi di sini rely ke endpoint /auth/me untuk mendapatkan
+ * informasi user (profil / role).
+ */
 
-export function clearTokens() {
-  const isProd = process.env.NODE_ENV === 'production';
-  const secureFlag = isProd ? 'Secure; SameSite=Strict' : 'SameSite=Lax';
-  document.cookie = `token=; path=/; max-age=0; ${secureFlag}`;
-}
-
-// Ambil token dari cookies (client side)
-export async function getTokenFromCookies(): Promise<string | null> {
-  for (let i = 0; i < 3; i++) {
-    const cookies = document.cookie.split(';').map((c) => c.trim());
-    const token = cookies.find((c) => c.startsWith('token='))?.split('=')[1] || null;
-    if (token && token.includes('.')) return token;
-    console.warn('No valid token found, user not logged in');
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-  return null;
-}
-
-// Ambil refresh token dari cookies (client side)
-export async function getRefreshTokenFromCookies(): Promise<string | null> {
-  const cookies = document.cookie.split(';').map((c) => c.trim());
-  const refreshToken = cookies.find((c) => c.startsWith('refreshToken='))?.split('=')[1] || null;
-  if (!refreshToken) {
-    console.error('No refresh token cookie found');
-    return null;
-  }
-  return refreshToken;
-}
-
-// Decode token JWT
-export function decodeToken(token: string): DecodedToken | null {
+/** Ambil profile/user dari backend (mengandalkan HttpOnly cookie) */
+export async function getUserProfile(): Promise<any | null> {
   try {
-    if (!token || !token.includes('.')) return null;
-    const decoded = jwtDecode<DecodedToken>(token);
-    if (!Object.values(RoleEnum).includes(decoded.activeRole)) {
-      // console.error(`Invalid role: ${decoded.activeRole}`);
-      return null;
-    }
-    return decoded;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`, {
+      method: 'GET',
+      credentials: 'include', // penting supaya browser kirim cookie HttpOnly
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    if (!res.ok) return null;
+    const json = await res.json();
+    // expected: { status: 'success', data: { user: { ... } } }
+    return json?.data?.user ?? null;
   } catch (err) {
-    console.error('Failed to decode token:', err);
+    console.error('getUserProfile error:', err);
     return null;
   }
 }
 
-// Cek apakah user sudah login
+/** Cek apakah user sudah terautentikasi (dengan memanggil /auth/me) */
 export async function isAuthenticated(): Promise<boolean> {
-  const token = await getTokenFromCookies();
-  return !!(token && decodeToken(token));
+  const user = await getUserProfile();
+  return !!user;
+}
+
+/** Ambil role user (jika butuh cepat) */
+export async function getUserRole(): Promise<RoleEnum | null> {
+  const user = await getUserProfile();
+  if (!user) return null;
+  return (user.activeRole as RoleEnum) || null;
+}
+
+/** Clear client-side auth state:
+ * - karena cookie httpOnly tidak dapat dihapus dari client,
+ *   panggil endpoint logout di backend untuk clear cookie dan session.
+ */
+export async function clearClientAuthState(): Promise<void> {
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}), // backend sebaiknya support body kosong
+    });
+  } catch (err) {
+    console.warn('clearClientAuthState failed:', err);
+  }
 }

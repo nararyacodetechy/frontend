@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { fetchMyProfile } from '@/services/accountService';
-import { setTokens } from '@/lib/auth-client';
 import { RoleEnum } from '@/types/role';
 
 const roleBasedRoutes: { [key in RoleEnum]: string } = {
@@ -21,48 +20,37 @@ const roleBasedRoutes: { [key in RoleEnum]: string } = {
 
 export default function LoginSuccess() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { setUser } = useAuth();
 
   useEffect(() => {
     const handleLoginSuccess = async () => {
-      const accessToken = searchParams.get('token');       // ambil dari URL
-      if (!accessToken) {
-        router.push('/auth/login?error=missing-tokens');
-        return;
-      }
-
-      // 1️⃣ Simpan access token di cookie
-      setTokens(accessToken);
-
-      // 2️⃣ Fetch profile pakai token langsung
       try {
-        const response = await fetchMyProfile(accessToken); 
-        if (!response?.data?.user) throw new Error('No profile data');
+        const user = await fetchMyProfile();
+        if (!user) throw new Error('No profile data');
 
-        const user = response.data.user;
         setUser({
           id: user.id,
           email: user.email,
-          roles: user.roles?.map((role: string) => role as RoleEnum) || [],
+          roles: (user.roles ?? []).map((r: string) => r as RoleEnum),
           activeRole: (user.activeRole as RoleEnum) || RoleEnum.USER,
           isEmailVerified: user.isEmailVerified ?? false,
           profile: user.profile
             ? {
-                id: user.profile.id,
+                id: user.profile.id ?? null,
                 userId: user.profile.userId,
-                fullName: user.profile.fullName,
-                username: user.profile.username || null,
-                nik: user.profile.nik || null,
-                address: user.profile.address || null,
-                phone: user.profile.phone || null,
-                company: user.profile.company || null,
-                imageProfile: user.profile.imageProfile || null,
+                fullName: user.profile.fullName ?? null,
+                username: user.profile.username ?? null,
+                nik: user.profile.nik ?? null,
+                address: user.profile.address ?? null,
+                phone: user.profile.phone ?? null,
+                company: user.profile.company ?? null,
+                imageProfile: user.profile.imageProfile ?? null,
               }
-            : undefined,
+            : null, // ⬅️ penting: pakai null, bukan undefined
         });
 
-        const redirectTo = roleBasedRoutes[user.activeRole as RoleEnum] || '/my-page/user';
+        const redirectTo =
+          roleBasedRoutes[(user.activeRole as RoleEnum) || RoleEnum.USER] || '/my-page/user';
         router.push(redirectTo);
       } catch (err) {
         console.error('Failed to fetch profile:', err);
@@ -71,7 +59,7 @@ export default function LoginSuccess() {
     };
 
     handleLoginSuccess();
-  }, [router, searchParams, setUser]);
+  }, [router, setUser]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

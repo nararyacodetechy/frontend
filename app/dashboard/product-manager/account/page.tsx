@@ -4,25 +4,27 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
+import { Users } from '@/types/user';
 import { fetchMyProfile } from '@/services/accountService';
+import LoadingRing from '@/components/general/LoadingRing';
+import AccountTabs from '@/components/account/AccountTabs';
+import AccountOverview from '@/components/account/AccountOverview';
+import AccountForm from '@/components/account/AccountForm';
 
-interface Profile {
-  id: string;
-  email: string;
-  fullName: string;
-  roles: string[];
-  activeRole: string;
-}
-
-export default function ProductManagerProfilePage() {
+export default function ProductManagerAccountPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [error, setError] = useState('');
+  const [profile, setProfile] = useState<Users | null>(null);
 
   useEffect(() => {
     if (loading) return;
-    if (!user || user.activeRole !== RoleEnum.ADMIN) {
+
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+
+    if (user.activeRole !== RoleEnum.PRODUCT_MANAGER) {
       router.push('/auth/login');
       return;
     }
@@ -31,29 +33,27 @@ export default function ProductManagerProfilePage() {
       try {
         const data = await fetchMyProfile();
         setProfile(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        console.error('Failed to fetch profile (product-manager page):', err);
       }
     };
 
     getProfile();
   }, [user, loading, router]);
 
-  if (loading || !profile) {
-    return <div>Loading...</div>;
-  }
+  if (loading || !profile) return <LoadingRing />;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-semibold text-teal-600 mb-4">Product Manager Profile</h2>
-      {error && <p className="text-red-600 mb-4">{error}</p>}
-      <div className="space-y-2">
-        <p><strong>Name:</strong> {profile.fullName}</p>
-        <p><strong>Email:</strong> {profile.email}</p>
-        <p><strong>Roles:</strong> {profile.roles.join(', ')}</p>
-        <p><strong>Active Role:</strong> {profile.activeRole}</p>
-        <p className="text-gray-600">Oversee product development and strategy here.</p>
-      </div>
+    <div className="w-full h-full">
+      <h1 className="text-2xl font-bold text-gray-800 mb-4">Account Settings</h1>
+      <AccountTabs role="product-manager" />
+
+      <section className="space-y-4">
+        <AccountOverview profile={profile} />
+        <div className="bg-white text-sm">
+          <AccountForm profile={profile} />
+        </div>
+      </section>
     </div>
   );
 }

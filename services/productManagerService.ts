@@ -15,7 +15,7 @@ const getAuthToken = (): string | null => {
     acc[name] = value;
     return acc;
   }, {} as Record<string, string>);
-  return cookies['token'] || null;
+  return cookies['access_token'] || null;
 };
 
 // Orders

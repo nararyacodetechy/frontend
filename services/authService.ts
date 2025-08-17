@@ -1,9 +1,8 @@
 import { AuthResponse, LoginPayload, RegisterPayload } from "@/types/auth";
 
-// lib/authService.ts
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
-export const register = async (data: RegisterPayload): Promise<AuthResponse> => {
+export const register = async (data: RegisterPayload): Promise<any> => {
   const res = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -14,24 +13,18 @@ export const register = async (data: RegisterPayload): Promise<AuthResponse> => 
   return res.json();
 };
 
-export const login = async (data: LoginPayload): Promise<AuthResponse> => {
+export const login = async (data: LoginPayload): Promise<any> => {
+  // Backend akan set HttpOnly cookie (access_token) pada response
   const res = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
+    credentials: 'include', // penting supaya browser menerima Set-Cookie
   });
 
   if (!res.ok) throw new Error(await res.text());
-  const response = await res.json();
-  const { accessToken, refreshToken, user } = response.data;
-  const isProduction = process.env.NODE_ENV === 'production';
-  document.cookie = `token=${accessToken}; path=/; max-age=${15 * 60}; secure=${isProduction}; sameSite=${
-    isProduction ? 'strict' : 'lax'
-  }`;
-  document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure=${isProduction}; sameSite=${
-    isProduction ? 'strict' : 'lax'
-  }`;
-  return { accessToken, refreshToken, user };
+  // backend returns { status, message, data: { user } }
+  return res.json();
 };
 
 export const verifyEmail = async (token: string) => {
@@ -39,6 +32,7 @@ export const verifyEmail = async (token: string) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token }),
+    credentials: 'include',
   });
 
   if (!res.ok) throw new Error(await res.text());
@@ -52,6 +46,7 @@ export const resendVerification = async (email: string) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ email }),
+    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -62,30 +57,44 @@ export const resendVerification = async (email: string) => {
   return await response.json();
 };
 
-export function loginWithGoogle() {  
+export function loginWithGoogle() {
   window.location.href = `${API_BASE_URL}/auth/google?prompt=select_account`;
 }
 
-export const refreshTokenApi = async (refreshToken: string): Promise<AuthResponse> => {
+/**
+ * Refresh token API.
+ * NOTE: backend should read refresh token from DB/session and issue new access_token cookie.
+ * We do not send refreshToken from client.
+ */
+export const refreshTokenApi = async (): Promise<any> => {
   const res = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+    credentials: 'include',
     cache: 'no-store',
+    body: JSON.stringify({}), // body empty - backend shouldn't require client-sent refreshToken
   });
 
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
 
-export async function logout(refreshToken: string): Promise<void> {
-  await fetch(`${API_BASE_URL}/auth/logout`, {
+export async function logout(): Promise<void> {
+  // Backend should invalidate session for req.user.userId or for the session related to cookie
+  const res = await fetch(`${API_BASE_URL}/auth/logout`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+    body: JSON.stringify({}), // send empty body; backend should accept and delete session(s)
   });
-  document.cookie = 'token=; path=/; max-age=0';
-  document.cookie = 'refreshToken=; path=/; max-age=0';
-}
 
-  
+  if (!res.ok) {
+    try {
+      const err = await res.json();
+      console.warn('Logout failed:', err);
+    } catch {
+      console.warn('Logout failed with non-json response');
+    }
+  }
+  // Do not attempt to clear HttpOnly cookie from client — backend must clear it using res.clearCookie
+}

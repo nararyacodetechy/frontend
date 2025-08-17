@@ -30,115 +30,28 @@ const routeAccessMap: { [key: string]: RoleEnum[] } = {
   '/my-page/customer': [RoleEnum.CUSTOMER],
 };
 
-// export async function middleware(request: NextRequest) {
-//   const { pathname } = request.nextUrl;
-//   const response = NextResponse.next();
-//   const token = request.cookies.get('token')?.value;
-//   const refreshToken = request.cookies.get('refreshToken')?.value;
-
-//   let decoded: DecodedToken | null = null;
-
-//   // Decode token if exists
-//   if (token) {
-//     try {
-//       decoded = decodeToken(token);
-//     } catch (e) {
-//       console.error('Failed to decode token:', e);
-//     }
-//   }
-
-//   // Tentukan role dan expectedRoute lebih awal (fallback USER)
-//   const role = decoded?.activeRole || RoleEnum.USER;
-//   const expectedRoute = roleBasedRoutes[role] || '/my-page/user';
-
-//   // Public routes
-//   const isPublic = PUBLIC_ROUTES.some(route =>
-//     route === '/' ? pathname === '/' : pathname.startsWith(route)
-//   );
-//   if (isPublic) return response;
-
-//   if (pathname === '/auth/login/success') {
-//     return NextResponse.redirect(new URL(expectedRoute, request.url));
-//   }
-
-//   // Refresh token if invalid or expired
-//   if (!decoded && refreshToken) {
-//     try {
-//       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh-token`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ refreshToken }),
-//       });
-
-//       if (!res.ok) {
-//         console.error('Refresh token request failed:', await res.text());
-//         return NextResponse.redirect(new URL('/auth/login', request.url));
-//       }
-
-//       const data = await res.json();
-//       const newAccessToken = data.accessToken;
-//       const newRefreshToken = data.refreshToken;
-
-//       try {
-//         decoded = decodeToken(newAccessToken);
-//       } catch (e) {
-//         console.error('Failed to decode new access token:', e);
-//         return NextResponse.redirect(new URL('/auth/login', request.url));
-//       }
-
-//       // Set new cookies
-//       response.cookies.set('token', newAccessToken, {
-//         path: '/',
-//         maxAge: 15 * 60,
-//         httpOnly: true,
-//         sameSite: 'lax',
-//         secure: process.env.NODE_ENV === 'production',
-//       });
-
-//       if (newRefreshToken) {
-//         response.cookies.set('refreshToken', newRefreshToken, {
-//           path: '/',
-//           maxAge: 30 * 24 * 60 * 60,
-//           httpOnly: true,
-//           sameSite: 'lax',
-//           secure: process.env.NODE_ENV === 'production',
-//         });
-//       }
-//     } catch (e) {
-//       console.error('Failed to refresh token in middleware:', e);
-//       return NextResponse.redirect(new URL('/auth/login', request.url));
-//     }
-//   }
-
-//   // Still no valid token
-//   if (!decoded) {
-//     return NextResponse.redirect(new URL('/auth/login', request.url));
-//   }
-
-//   // Role-specific access control
-//   for (const [prefix, allowedRoles] of Object.entries(routeAccessMap)) {
-//     if (pathname.startsWith(prefix) && !allowedRoles.includes(role)) {
-//       return NextResponse.redirect(new URL(expectedRoute, request.url));
-//     }
-//   }
-
-//   return response;
-// }
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('token')?.value;
+
+  // Allow public routes
+  if (PUBLIC_ROUTES.includes(pathname)) return NextResponse.next();
+
+  const token = request.cookies.get('access_token')?.value;
 
   if (!token) {
-    if (PUBLIC_ROUTES.includes(pathname)) return NextResponse.next();
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
+  // decode (note: jwt-decode, not signature-verified)
   let decoded: DecodedToken | null = null;
   try {
     decoded = decodeToken(token);
   } catch (e) {
-    console.error('Token invalid/expired:', e);
+    console.error('Token invalid/expired in middleware:', e);
+    return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+
+  if (!decoded) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
@@ -154,7 +67,6 @@ export async function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
-
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],

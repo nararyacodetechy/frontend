@@ -3,18 +3,24 @@
 import { useAuth } from '@/context/AuthContext';
 import { RoleEnum } from '@/types/role';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function ProductManagerDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || ![RoleEnum.PRODUCT_MANAGER, RoleEnum.ADMIN].includes(user.activeRole))) {
+      router.push('/auth/login');
+    }
+  }, [user, loading, router]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!user || ![RoleEnum.PRODUCT_MANAGER, RoleEnum.ADMIN].includes(user.activeRole)) {
-    router.push('/auth/login');
-    return null;
+    return null; // sementara kosong, user akan diarahkan di useEffect
   }
 
   return (

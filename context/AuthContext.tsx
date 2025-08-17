@@ -5,7 +5,6 @@ import type { AuthContextType } from '@/types/auth';
 import type { Users } from '@/types/user';
 import { PUBLIC_ROUTES } from '@/lib/public-routes';
 import { fetchMyProfile } from '@/services/accountService';
-import { getTokenFromCookies, decodeToken, getRefreshTokenFromCookies } from '@/lib/auth-client';
 import { login as loginApi, logout as logoutApi } from '@/services/authService';
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -17,37 +16,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const login = useCallback(async (payload: any) => {
-    const { user } = await loginApi(payload);
-    setUser(user);
+    const res = await loginApi(payload);
+    // backend should return { status, message, data: { user } }
+    const returnedUser = res?.data?.user ?? null;
+    setUser(returnedUser);
+    return returnedUser;
   }, []);
 
   const logout = useCallback(async () => {
-    const refreshToken = await getRefreshTokenFromCookies(); // ← tambahkan await
-    if (refreshToken) await logoutApi(refreshToken);
+    try {
+      await logoutApi(); // backend should accept no-arg and clear cookie/session
+    } catch (err) {
+      console.warn('logoutApi failed:', err);
+    }
     setUser(null);
     router.push('/auth/login');
   }, [router]);
 
   const loadUser = useCallback(async () => {
-    const token = await getTokenFromCookies(); // ← tambahkan await
-    if (!token) return;
-  
-    const decoded = decodeToken(token);
-    if (!decoded) {
-      logout();
-      return;
-    }
-  
     try {
-      const profile = await fetchMyProfile();
+      const profile = await fetchMyProfile(); // will use credentials: 'include'
+      if (!profile) {
+        setUser(null);
+        return;
+      }
       setUser(profile);
     } catch (err) {
       console.error('Failed to load user profile:', err);
-      const refreshToken = await getRefreshTokenFromCookies(); // ← tambahkan await
-      if (!refreshToken) logout();
-      // TODO: refresh logic here
+      setUser(null);
+      // optional: try refresh flow here by calling refreshTokenApi from authService
     }
-  }, [logout]);
+  }, []);
 
   useEffect(() => {
     if (PUBLIC_ROUTES.includes(pathname)) {

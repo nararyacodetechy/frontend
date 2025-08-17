@@ -1,4 +1,3 @@
-// lib/auth-server.ts
 import { cookies } from 'next/headers'
 import { RoleEnum } from '@/types/role'
 import { jwtDecode } from 'jwt-decode'
@@ -8,18 +7,13 @@ import { refreshTokenApi } from '@/services/authService'
 // Ambil token dari cookies (server side)
 export async function getTokenFromCookies(): Promise<string | null> {
   const cookieStore = await cookies()
-  const token = cookieStore.get('token')?.value || null
+  const token = cookieStore.get('access_token')?.value || null
   if (!token || !token.includes('.')) return null
   return token
 }
 
-// Ambil refresh token dari cookies (server side)
-export async function getRefreshTokenFromCookies(): Promise<string | null> {
-  const cookieStore = await cookies()
-  return cookieStore.get('refreshToken')?.value || null
-}
-
-// Decode token JWT
+// Decode token JWT (server-side). Hanya untuk keperluan server-side rendering.
+// NOTE: jika token expired / invalid, fungsi ini kembalikan null.
 export function decodeToken(token: string): DecodedToken | null {
   try {
     if (!token || !token.includes('.')) return null
@@ -31,44 +25,28 @@ export function decodeToken(token: string): DecodedToken | null {
   }
 }
 
-// Cek apakah user sudah login
+// Cek apakah user sudah login (server-side)
 export async function isAuthenticated(): Promise<boolean> {
   const token = await getTokenFromCookies()
   return !!(token && decodeToken(token))
 }
 
-// Refresh access token pakai refresh token
+// Minta backend refresh-token (tidak mengirim refresh token karena backend punya state)
+// Backend endpoint /auth/refresh-token harus menerima request dengan credentials: include
 export async function refreshTokenLib() {
-  const refreshToken = await getRefreshTokenFromCookies()
-  if (!refreshToken) return { accessToken: null }
+  try {
+    const data = await refreshTokenApi() // updated to no-arg
+    if (!data) return { accessToken: null }
 
-  const data = await refreshTokenApi(refreshToken)
-  if (!data) return { accessToken: null }
-
-  const { accessToken, refreshToken: newRefreshToken } = data.data
-  const isProduction = process.env.NODE_ENV === 'production'
-  const cookieStore = await cookies()
-
-  cookieStore.set('token', accessToken, {
-    secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
-    maxAge: 7 * 24 * 60 * 60,
-    path: '/',
-  })
-
-  if (newRefreshToken) {
-    cookieStore.set('refreshToken', newRefreshToken, {
-      secure: isProduction,
-      sameSite: isProduction ? 'strict' : 'lax',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/',
-    })
+    // backend akan update cookie access_token otomatis
+    return { accessToken: data.accessToken ?? null }
+  } catch (err) {
+    console.warn('refreshTokenLib error:', err)
+    return { accessToken: null }
   }
-
-  return { accessToken }
 }
 
-// Cek role
+// Cek role (server-side)
 export async function hasRole(requiredRole: RoleEnum): Promise<boolean> {
   const token = await getTokenFromCookies()
   const decoded = token ? decodeToken(token) : null

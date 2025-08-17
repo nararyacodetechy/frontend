@@ -8,5 +8,5 @@ export interface Users {
   roles: RoleEnum[];
   activeRole: RoleEnum;
   isEmailVerified: boolean;
-  profile?: Profile | null;
+  profile: Profile | null;
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { decodeToken, getTokenFromCookies } from '@/lib/auth-client';
+import { fetchMyProfile } from '@/services/accountService';
 import { RoleEnum } from '@/types/role';
 
 const redirectRoles = [
@@ -21,21 +21,19 @@ export default function RedirectIfAuthenticated() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = await getTokenFromCookies();
-      if (!token) return;
-
       try {
-        const payload = decodeToken(token);
-        const role = payload?.activeRole;
+        const profile = await fetchMyProfile();
+        const role = profile?.role || profile?.activeRole;
 
         if (role && redirectRoles.includes(role)) {
           setIsRedirecting(true);
           setTimeout(() => {
             router.replace(`/dashboard/${role.toLowerCase()}`);
-          }, 1500); // Delay sedikit untuk tampilan UX
+          }, 1500);
         }
       } catch (err) {
-        console.error('Invalid token', err);
+        // Tidak login atau fetch gagal, biarkan user tetap di halaman login
+        console.warn('User not authenticated or failed to fetch profile:', err);
       }
     };
 

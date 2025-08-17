@@ -10,7 +10,7 @@ const RegisterSuccess = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const token = searchParams.get('access_token');
     if (token) {
       router.push('/auth/login');
     }

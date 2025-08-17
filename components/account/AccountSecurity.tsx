@@ -1,15 +1,24 @@
 'use client';
 
 import { useState } from 'react';
+import { Users } from '@/types/user';
 
 interface Props {
-  profile: any;
+  profile: Users;
 }
 
 export default function AccountSecurity({ profile }: Props) {
   const [hasPassword, setHasPassword] = useState(
     !!profile?.profile?.passwordSet
   );
+
+  if (!profile || !profile.profile) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <p className="text-gray-500">Profile data is unavailable.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -18,7 +27,7 @@ export default function AccountSecurity({ profile }: Props) {
         <label className="block text-gray-700 font-medium mb-1">Email</label>
         <input
           type="email"
-          value={profile?.email || ''}
+          value={profile.email || ''}
           disabled
           className="w-full border-b border-gray-200 py-2 text-gray-700 bg-gray-50 cursor-not-allowed"
         />

@@ -4,24 +4,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
-  { label: 'My Profile', path: '' },
+  { label: 'My Profile', path: 'profile' },
   { label: 'Security', path: 'security' },
   { label: 'Preferences', path: 'preferences' },
   { label: 'Activity', path: 'activity' },
 ];
 
-export default function AccountTabs({ role }: { role?: string }) {
+export default function AccountTabs({ role }: { role: string }) {
   const pathname = usePathname();
-
-  // derive role dari path kalau tidak diberikan
-  let roleName = role;
-  if (!roleName) {
-    const segs = pathname.split('/').filter(Boolean); // ['dashboard','product-manager','account',...]
-    // index 1 biasanya role (after 'dashboard')
-    roleName = segs[1] ?? 'user';
-  }
-
-  const base = `/dashboard/${roleName}/account`;
+  const base = `/dashboard/${role}/account`;
 
   return (
     <nav className="flex gap-4 border-b border-gray-300 mb-6 text-sm overflow-x-auto">

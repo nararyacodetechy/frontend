@@ -7,7 +7,7 @@ import { RoleEnum } from '@/types/role';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import LoadingRing from '@/components/general/LoadingRing';
-import { NAV_CONFIG } from '@/lib/nav-dashboard';
+import { getNavLinks } from '@/lib/nav-dashboard';
 import { useTheme } from 'next-themes';
 import { Moon, Sun, Bell, Globe, User } from 'lucide-react';
 
@@ -56,9 +56,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     pathname?.startsWith(`/dashboard/${role.toLowerCase()}`)
   );
   const currentRole = matchedRole ?? user.activeRole;
-  const navLinks = (NAV_CONFIG[currentRole] ?? []).map(link => ({
+  const navLinks = getNavLinks(currentRole).map(link => ({
     label: link.label,
-    href: link.getHref(user.activeRole),
+    href: link.getHref(currentRole),
   }));
 
   return (

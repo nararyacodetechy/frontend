@@ -4,27 +4,36 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
-  { label: 'My Profile', path: 'account' },
-  { label: 'Change Password', path: 'account/password' },
-  { label: 'Preferences', path: 'account/preferences' },
-  { label: 'Security', path: 'account/security' },
-  { label: 'Activity', path: 'account/activity' },
+  { label: 'My Profile', path: '' },
+  { label: 'Security', path: 'security' },
+  { label: 'Preferences', path: 'preferences' },
+  { label: 'Activity', path: 'activity' },
 ];
 
-export default function AccountTabs({ role }: { role: string }) {
+export default function AccountTabs({ role }: { role?: string }) {
   const pathname = usePathname();
-  const base = `/dashboard/${role}`;
+
+  // derive role dari path kalau tidak diberikan
+  let roleName = role;
+  if (!roleName) {
+    const segs = pathname.split('/').filter(Boolean); // ['dashboard','product-manager','account',...]
+    // index 1 biasanya role (after 'dashboard')
+    roleName = segs[1] ?? 'user';
+  }
+
+  const base = `/dashboard/${roleName}/account`;
 
   return (
-    <nav className="flex gap-4 border-b border-gray-300 mb-6 text-sm">
+    <nav className="flex gap-4 border-b border-gray-300 mb-6 text-sm overflow-x-auto">
       {tabs.map((t) => {
-        const href = `${base}/${t.path}`;
+        const href = t.path ? `${base}/${t.path}` : base;
+        const isActive = pathname === href || pathname === href + '/';
         return (
           <Link
             key={href}
             href={href}
-            className={`pb-2 border-b-2 ${
-              pathname === href
+            className={`pb-2 border-b-2 whitespace-nowrap ${
+              isActive
                 ? 'border-red-600 text-red-600 font-medium'
                 : 'border-transparent text-gray-600 hover:text-red-600'
             }`}

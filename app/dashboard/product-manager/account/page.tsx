@@ -46,7 +46,6 @@ export default function ProductManagerAccountPage() {
   return (
     <div className="w-full h-full">
       <h1 className="text-2xl font-bold text-gray-800 mb-4">Account Settings</h1>
-      <AccountTabs role="product-manager" />
 
       <section className="space-y-4">
         <AccountOverview profile={profile} />

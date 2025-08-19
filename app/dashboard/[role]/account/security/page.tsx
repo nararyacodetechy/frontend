@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import { fetchMyProfile } from '@/services/accountService';
-import AccountSecurity from '@/components/account/AccountSecurity';
+import AccountSecurity from '@/components/dashboard/account/AccountSecurity';
 import { Users } from '@/types/user';
 
 export default async function SecurityPage() {

@@ -6,12 +6,12 @@ import { getOrderById, addFeature, updateFeature, deleteFeature, addRequirement,
 import { Order } from '@/types/order';
 import { Feature, RequirementItem } from '@/types/feature';
 import CustomAlert from '@/components/general/CustomAlert';
-import InfoClient from '@/components/order/InfoClient';
-import InfoOrder from '@/components/order/InfoOrder';
-import Onboarding from '@/components/order/Onboarding';
-import AddFeature from '@/components/order/AddFeature';
-import ListFeatures from '@/components/order/ListFeatures';
-import PricingAndPayment from '@/components/order/PricingAndPayment';
+import InfoClient from '@/components/dashboard/order/InfoClient';
+import InfoOrder from '@/components/dashboard/order/InfoOrder';
+import Onboarding from '@/components/dashboard/order/Onboarding';
+import AddFeature from '@/components/dashboard/order/AddFeature';
+import ListFeatures from '@/components/dashboard/order/ListFeatures';
+import PricingAndPayment from '@/components/dashboard/order/PricingAndPayment';
 import { useAuth } from '@/context/AuthContext';
 
 export default function OrderDetailPage() {

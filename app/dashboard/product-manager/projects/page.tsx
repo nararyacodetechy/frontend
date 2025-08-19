@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
-import ProjectList from '@/components/project/ProjectList';
-import ProjectForm from '@/components/project/ProjectForm';
+import ProjectList from '@/components/dashboard/project/ProjectList';
+import ProjectForm from '@/components/dashboard/project/ProjectForm';
 
 type Client = {
   id: number;

@@ -7,7 +7,7 @@ import { RoleEnum } from '@/types/role';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import LoadingRing from '@/components/general/LoadingRing';
-import { getNavLinks } from '@/lib/nav-dashboard';
+import { getNavLinks } from '@/lib/sidebar-dashboard';
 import { useTheme } from 'next-themes';
 import { Moon, Sun, Bell, Globe, User } from 'lucide-react';
 

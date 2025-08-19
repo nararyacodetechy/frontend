@@ -1,12 +1,14 @@
 // app/dashboard/[role]/account/profile/page.tsx
 import { headers } from 'next/headers';
 import { fetchMyProfile } from '@/services/accountService';
-import AccountOverview from '@/components/account/AccountOverview';
-import AccountForm from '@/components/account/AccountForm';
+import AccountOverview from '@/components/dashboard/account/AccountOverview';
+import AccountForm from '@/components/dashboard/account/AccountForm';
 
 export default async function ProfilePage() {
   const cookie = (await headers()).get('cookie') || '';
   const profile = await fetchMyProfile({ cookie });
+
+  console.log('profile:', profile);
 
   if (!profile) {
     return (

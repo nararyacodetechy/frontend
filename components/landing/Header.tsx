@@ -20,7 +20,7 @@ export default async function Header() {
   const myPagePath = '/my-page/user';
 
   return (
-    <header className="fixed top-0 z-40 bg-white dark:bg-[#121212] text-black dark:text-white border-b border-gray-200 py-4 px-12 w-full">
+    <header className="fixed top-0 z-40 bg-white dark:bg-[#121212] text-black dark:text-white border-b border-gray-200 py-4 px-6 md:px-12 w-full">
       <div className="flex justify-between items-center">
         <Link href="/" className="font-bold text-xl">Mokami</Link>
         <nav className="flex gap-8">

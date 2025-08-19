@@ -150,7 +150,7 @@ export default function SectionProjectFlow() {
   };
 
   return (
-    <section className="relative w-full px-12">
+    <section className="relative w-full px-6 md:px-12">
       <div className="flex flex-col pb-20">
         <h2 className="text-2xl md:text-3xl font-bold text-center">
             Bagaimana Memulainya?

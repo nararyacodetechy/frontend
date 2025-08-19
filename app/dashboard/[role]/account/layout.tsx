@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import AccountTabs from '@/components/account/AccountTabs';
+import AccountTabs from '@/components/dashboard/account/AccountTabs';
 
 export default function AccountLayout({
   children,

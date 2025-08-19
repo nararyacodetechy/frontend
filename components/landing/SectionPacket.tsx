@@ -1,6 +1,6 @@
 export default function SectionPacket() {
   return (
-    <section id="paket" className="px-12 py-20 bg-white dark:bg-[#262626] text-black dark:text-white">
+    <section id="paket" className="px-6 md:px-12 py-20 bg-white dark:bg-[#262626] text-black dark:text-white">
       <h2 className="text-3xl font-bold mb-2 text-center">Perbandingan Paket</h2>
       <p className="text-center text-gray-700 dark:text-gray-200 mb-10">Pilih paket sesuai kebutuhan bisnis Anda</p>
 

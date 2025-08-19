@@ -2,6 +2,23 @@ import { AuthResponse, LoginPayload, RegisterPayload } from "@/types/auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
+export async function getAuthUserApi(): Promise<any | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: "GET",
+      credentials: "include", // kirim cookie HttpOnly
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data?.user ?? null;
+  } catch (err) {
+    console.error("getAuthUser error:", err);
+    return null;
+  }
+}
+
 export const register = async (data: RegisterPayload): Promise<any> => {
   const res = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',

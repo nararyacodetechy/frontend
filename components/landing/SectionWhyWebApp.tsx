@@ -179,7 +179,7 @@ export default function SectionWhyWebApp() {
   );
 
   return (
-    <section className="w-full px-12 py-16 bg-white dark:bg-black text-black dark:text-white mb-28">
+    <section className="w-full px-6 md:px-12 py-16 bg-white dark:bg-black text-black dark:text-white mb-28">
       <div className="max-w-7xl mx-auto space-y-8">
         <h2 className="text-2xl md:text-3xl font-bold text-center mb-20">
           Mengapa Harus Membuat Web Aplikasi?

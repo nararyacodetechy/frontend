@@ -224,7 +224,7 @@ export default function SectionQnA() {
     };
   
     return (
-      <section className="max-w-5xl mx-auto px-4 py-12">
+      <section className="max-w-5xl mx-auto px-6 md:px-12 py-12">
         <h2 className="text-3xl font-bold mb-8 text-center">Pertanyaan Umum (Q&amp;A)</h2>
         <div className="space-y-4">
           {qnaData.map((item, index) => (

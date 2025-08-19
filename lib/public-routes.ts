@@ -1,14 +1,13 @@
 // lib/public-routes.ts
+// List of routes accessible without authentication
 export const PUBLIC_ROUTES = [
-    '/',
-    '/auth/login',
-    '/auth/login/success',
-    '/auth/register',
-    '/auth/register/success',
-    '/auth/verify-email-sent',
-    '/auth/forgot-password',
-    '/auth/reset-password',
-    '/auth/login/success',
-    '/auth/verify-email',
-  ];
-  
+  '/',                           // Homepage
+  '/auth/login',                // Login page
+  '/auth/login/success',        // Login success redirect
+  '/auth/register',             // Registration page
+  '/auth/register/success',     // Registration success redirect
+  '/auth/verify-email-sent',    // Email verification sent page
+  '/auth/forgot-password',      // Forgot password page
+  '/auth/reset-password',       // Reset password page
+  '/auth/verify-email',         // Email verification page
+];

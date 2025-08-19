@@ -17,7 +17,7 @@ export default function SectionOrder() {
   }
 
   return (
-    <section className="px-6 py-16 bg-[#262626]" id="order">
+    <section className="px-6 md:px-12 py-16 bg-[#262626]" id="order">
       <h2 className="text-3xl font-bold mb-6 text-center text-white">Order Form</h2>
 
       <div className="max-w-2xl mx-auto mb-8 text-center text-[#ccc]">

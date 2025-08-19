@@ -1,7 +1,7 @@
 export default function SectionCTA() {
     return (
-      <section className="px-6 py-16 bg-[#121212] text-center">
-        <h2 className="text-2xl font-semibold mb-4">Masih Bingung?</h2>
+      <section className="px-6 md:px-12 py-16 bg-[#121212] text-center">
+        <h2 className="text-2xl font-semibold mb-4 text-white">Masih Bingung?</h2>
         <p className="text-[#ccc] mb-6">Klik tombol di bawah untuk tanya langsung tim kami!</p>
         <a
           href="https://wa.me/62xxxxxxxxxxx"

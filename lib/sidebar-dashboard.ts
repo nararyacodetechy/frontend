@@ -7,7 +7,7 @@ type NavLink = {
 
 // menu umum (semua role punya ini)
 export const GENERAL_SIDEBAR: NavLink[] = [
-  { label: 'Account', getHref: (role) => `/dashboard/${role.toLowerCase()}/account/security` },
+  { label: 'Account', getHref: (role) => `/dashboard/${role.toLowerCase()}/account/profile` },
   { label: 'Wallet', getHref: (role) => `/dashboard/${role.toLowerCase()}/wallet` },
   { label: 'Notification', getHref: (role) => `/dashboard/${role.toLowerCase()}/notification` },
 ];
@@ -64,9 +64,6 @@ export const SPECIFIC_SIDEBAR: Partial<Record<RoleEnum, NavLink[]>> = {
     { label: 'Schedule', getHref: () => '/dashboard/designer/schedule' },
     { label: 'Team & Role', getHref: () => '/dashboard/designer/team-role' },
     { label: 'Docs', getHref: () => '/dashboard/designer/docs' },
-    // { label: 'My Wallet', getHref: () => '/dashboard/designer/my-wallet' },
-    // { label: 'Notification', getHref: () => '/dashboard/designer/notification' },
-    // { label: 'Account', getHref: () => '/dashboard/designer/account' },
   ],
 };
 

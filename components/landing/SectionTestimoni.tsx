@@ -1,6 +1,6 @@
 export default function SectionTestimoni() {
     return (
-      <section className="px-12 py-16 bg-[#121212]">
+      <section className="px-6 md:px-12 py-16 bg-[#121212]">
         <h2 className="text-3xl font-bold mb-8 text-center text-white">Testimoni & Studi Kasus</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="p-4 border border-[#444] rounded">

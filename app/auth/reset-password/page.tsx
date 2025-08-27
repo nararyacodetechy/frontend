@@ -21,7 +21,7 @@ export default function ResetPasswordPage() {
       });
       if (!res.ok) throw new Error(await res.text());
       setMessage('Password reset successfully');
-      setTimeout(() => router.push('/login'), 3000);
+      setTimeout(() => router.push('/auth/login'), 3000);
     } catch (err: any) {
       setError(err.message);
     }

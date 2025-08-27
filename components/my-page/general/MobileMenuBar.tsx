@@ -17,7 +17,7 @@ export default function MobileMenuBar({ onOpen }: { onOpen: () => void }) {
   };
 
   return (
-    <header className="w-full bg-white border-b md:hidden">
+    <header className="w-full bg-white border-b border-gray-200 md:hidden">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Hamburger */}
         <button

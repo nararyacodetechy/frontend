@@ -1,3 +1,4 @@
+// types/auth.ts
 import { Dispatch, SetStateAction } from 'react';
 import { RoleEnum } from './role';
 import { Users } from './user';
@@ -42,7 +43,7 @@ export interface AuthContextType {
 }
 
 export interface DecodedToken {
-  userId: string;
+  sub: string; // Changed from userId to sub to match JWT payload
   email: string;
   activeRole: RoleEnum;
   iat?: number;

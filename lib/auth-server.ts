@@ -1,54 +1,59 @@
-import { cookies } from 'next/headers'
-import { RoleEnum } from '@/types/role'
-import { jwtDecode } from 'jwt-decode'
-import { DecodedToken } from '@/types/auth'
-import { refreshTokenApi } from '@/services/authService'
+// lib/auth-server.ts
+import { cookies } from 'next/headers';
+import { jwtDecode } from 'jwt-decode';
+import { DecodedToken } from '@/types/auth';
+import { refreshTokenApi } from '@/services/authService';
+import { RoleEnum } from '@/types/role';
 
-// Ambil token dari cookies (server side)
-export async function getTokenFromCookies(): Promise<string | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('access_token')?.value || null
-  if (!token || !token.includes('.')) return null
-  return token
+export async function getTokenFromCookies(userId?: string): Promise<string | null> {
+  const cookieStore = await cookies();
+  if (userId) {
+    const token = cookieStore.get(`access_token_${userId}`)?.value || null;
+    console.log('getTokenFromCookies: Token for userId', userId, token ? 'found' : 'not found');
+    if (!token || !token.includes('.')) return null;
+    return token;
+  }
+
+  // Fallback to any access_token_<userId> cookie
+  const tokenCookie = cookieStore.getAll().find((c) => c.name.startsWith('access_token_'));
+  const token = tokenCookie?.value || null;
+  console.log('getTokenFromCookies: Token from any cookie', token ? 'found' : 'not found');
+  if (!token || !token.includes('.')) return null;
+  return token;
 }
 
-// Decode token JWT (server-side). Hanya untuk keperluan server-side rendering.
-// NOTE: jika token expired / invalid, fungsi ini kembalikan null.
 export function decodeToken(token: string): DecodedToken | null {
   try {
-    if (!token || !token.includes('.')) return null
-    const decoded = jwtDecode<DecodedToken>(token)
-    if (!Object.values(RoleEnum).includes(decoded.activeRole)) return null
-    return decoded
-  } catch {
-    return null
-  }
-}
-
-// Cek apakah user sudah login (server-side)
-export async function isAuthenticated(): Promise<boolean> {
-  const token = await getTokenFromCookies()
-  return !!(token && decodeToken(token))
-}
-
-// Minta backend refresh-token (tidak mengirim refresh token karena backend punya state)
-// Backend endpoint /auth/refresh-token harus menerima request dengan credentials: include
-export async function refreshTokenLib() {
-  try {
-    const data = await refreshTokenApi() // updated to no-arg
-    if (!data) return { accessToken: null }
-
-    // backend akan update cookie access_token otomatis
-    return { accessToken: data.accessToken ?? null }
+    if (!token || !token.includes('.')) return null;
+    const decoded = jwtDecode<DecodedToken>(token);
+    if (!Object.values(RoleEnum).includes(decoded.activeRole)) return null;
+    console.log('decodeToken: Decoded token', decoded);
+    return decoded;
   } catch (err) {
-    console.warn('refreshTokenLib error:', err)
-    return { accessToken: null }
+    console.log('decodeToken: Error decoding token', err);
+    return null;
   }
 }
 
-// Cek role (server-side)
+export async function isAuthenticated(): Promise<boolean> {
+  const token = await getTokenFromCookies();
+  return !!(token && decodeToken(token));
+}
+
+export async function refreshTokenLib(userId?: string) {
+  try {
+    const data = await refreshTokenApi(userId);
+    if (!data) return { accessToken: null };
+    console.log('refreshTokenLib: Token refreshed', !!data.accessToken);
+    return { accessToken: data.accessToken ?? null };
+  } catch (err) {
+    console.log('refreshTokenLib: Error refreshing token', err);
+    return { accessToken: null };
+  }
+}
+
 export async function hasRole(requiredRole: RoleEnum): Promise<boolean> {
-  const token = await getTokenFromCookies()
-  const decoded = token ? decodeToken(token) : null
-  return decoded?.activeRole === requiredRole
+  const token = await getTokenFromCookies();
+  const decoded = token ? decodeToken(token) : null;
+  return decoded?.activeRole === requiredRole;
 }

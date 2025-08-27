@@ -1,22 +1,23 @@
-'use client'
+// src/components/dashboard/order/Onboarding.tsx
+'use client';
 
-import { useState } from 'react'
-import { Order, Meeting } from '@/types/order'
-import { Calendar, Clock, Link, FileText, CheckCircle, Plus, Trash2, Copy, Undo2, Zap } from 'lucide-react'
+import { useState } from 'react';
+import { Order, Meeting } from '@/types/order';
+import { Calendar, Clock, Link, FileText, CheckCircle, Plus, Trash2, Copy, Undo2, Zap } from 'lucide-react';
 
 interface OnboardingProps {
-  data: Order
-  setData: (data: Order | null) => void
+  data: Order;
+  setData: (data: Order) => void;
   setAlertConfig: (config: {
-    isOpen: boolean
-    type: 'alert' | 'confirm'
-    title: string
-    message: string
-    confirmText: string
-    cancelText: string
-    onConfirm: () => void
-    onCancel: () => void
-  }) => void
+    isOpen: boolean;
+    type: 'alert' | 'confirm';
+    title: string;
+    message: string;
+    confirmText: string;
+    cancelText: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+  }) => void;
 }
 
 export default function Onboarding({ data, setData, setAlertConfig }: OnboardingProps) {
@@ -26,10 +27,10 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
     link: '',
     notes: '',
     isAdHoc: false,
-  })
-  const [analysisNotes, setAnalysisNotes] = useState(data.onboarding?.analysisNotes || '')
-  const [copiedLink, setCopiedLink] = useState<string | null>(null)
-  const [showAdHocHistory, setShowAdHocHistory] = useState(false)
+  });
+  const [analysisNotes, setAnalysisNotes] = useState(data.onboarding?.analysisNotes || '');
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [showAdHocHistory, setShowAdHocHistory] = useState(false);
 
   const handleAddMeeting = (isAdHoc: boolean = false) => {
     if (!newMeeting.date || !newMeeting.time || !newMeeting.link) {
@@ -40,32 +41,34 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
         message: 'Harap isi tanggal, waktu, dan link meeting.',
         confirmText: 'OK',
         cancelText: '',
-        onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false })),
+        onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
         onCancel: () => {},
-      })
-      return
+      });
+      return;
     }
 
     const meeting: Meeting = {
       id: crypto.randomUUID(),
+      onboardingId: data.onboarding?.id || crypto.randomUUID(),
       date: newMeeting.date,
       time: newMeeting.time,
       link: newMeeting.link,
       notes: newMeeting.notes,
       isAdHoc,
-    }
+      createdAt: new Date().toISOString(),
+    };
 
-    setData(prev => ({
-      ...prev!,
+    setData({
+      ...data,
       onboarding: {
-        ...prev!.onboarding,
-        meetings: [...(prev!.onboarding?.meetings || []), meeting],
-        status: isAdHoc ? prev!.onboarding?.status : 'meeting_scheduled',
+        ...data.onboarding!,
+        meetings: [...(data.onboarding?.meetings || []), meeting],
+        status: isAdHoc ? data.onboarding?.status || 'initial' : 'meeting_scheduled',
       },
-    }))
+    });
 
-    setNewMeeting({ date: '', time: '', link: '', notes: '', isAdHoc: false })
-  }
+    setNewMeeting({ date: '', time: '', link: '', notes: '', isAdHoc: false });
+  };
 
   const handleDeleteMeeting = (meetingId: string) => {
     setAlertConfig({
@@ -76,28 +79,28 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
       confirmText: 'Hapus',
       cancelText: 'Batal',
       onConfirm: () => {
-        setData(prev => ({
-          ...prev!,
+        setData({
+          ...data,
           onboarding: {
-            ...prev!.onboarding,
-            meetings: prev!.onboarding?.meetings?.filter(m => m.id !== meetingId) || [],
+            ...data.onboarding!,
+            meetings: data.onboarding?.meetings?.filter((m) => m.id !== meetingId) || [],
           },
-        }))
-        setAlertConfig(prev => ({ ...prev, isOpen: false }))
+        });
+        setAlertConfig((prev) => ({ ...prev, isOpen: false }));
       },
-      onCancel: () => setAlertConfig(prev => ({ ...prev, isOpen: false })),
-    })
-  }
+      onCancel: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+    });
+  };
 
   const handleSaveAnalysis = () => {
-    setData(prev => ({
-      ...prev!,
+    setData({
+      ...data,
       onboarding: {
-        ...prev!.onboarding,
+        ...data.onboarding!,
         analysisNotes,
         status: 'analysis_complete',
       },
-    }))
+    });
     setAlertConfig({
       isOpen: true,
       type: 'alert',
@@ -105,10 +108,10 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
       message: 'Catatan analisis telah disimpan.',
       confirmText: 'OK',
       cancelText: '',
-      onConfirm: () => setAlertConfig(prev => ({ ...prev, isOpen: false })),
+      onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
       onCancel: () => {},
-    })
-  }
+    });
+  };
 
   const handleMarkComplete = () => {
     setAlertConfig({
@@ -119,18 +122,18 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
       confirmText: 'Selesai',
       cancelText: 'Batal',
       onConfirm: () => {
-        setData(prev => ({
-          ...prev!,
+        setData({
+          ...data,
           onboarding: {
-            ...prev!.onboarding,
+            ...data.onboarding!,
             status: 'completed',
           },
-        }))
-        setAlertConfig(prev => ({ ...prev, isOpen: false }))
+        });
+        setAlertConfig((prev) => ({ ...prev, isOpen: false }));
       },
-      onCancel: () => setAlertConfig(prev => ({ ...prev, isOpen: false })),
-    })
-  }
+      onCancel: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+    });
+  };
 
   const handleReopenOnboarding = () => {
     setAlertConfig({
@@ -141,44 +144,44 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
       confirmText: 'Buka Kembali',
       cancelText: 'Batal',
       onConfirm: () => {
-        setData(prev => ({
-          ...prev!,
+        setData({
+          ...data,
           onboarding: {
-            ...prev!.onboarding,
+            ...data.onboarding!,
             status: 'analysis_complete',
           },
-        }))
-        setAlertConfig(prev => ({ ...prev, isOpen: false }))
+        });
+        setAlertConfig((prev) => ({ ...prev, isOpen: false }));
       },
-      onCancel: () => setAlertConfig(prev => ({ ...prev, isOpen: false })),
-    })
-  }
+      onCancel: () => setAlertConfig((prev) => ({ ...prev, isOpen: false }));
+    });
+  };
 
   const handleCopyLink = (link: string) => {
-    navigator.clipboard.writeText(link)
-    setCopiedLink(link)
-    setTimeout(() => setCopiedLink(null), 2000)
-  }
+    navigator.clipboard.writeText(link);
+    setCopiedLink(link);
+    setTimeout(() => setCopiedLink(null), 2000);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'initial':
-        return 'bg-blue-100 text-blue-700'
+        return 'bg-blue-100 text-blue-700';
       case 'meeting_scheduled':
-        return 'bg-yellow-100 text-yellow-700'
+        return 'bg-yellow-100 text-yellow-700';
       case 'analysis_complete':
-        return 'bg-green-100 text-green-700'
+        return 'bg-green-100 text-green-700';
       case 'completed':
-        return 'bg-green-200 text-green-800'
+        return 'bg-green-200 text-green-800';
       default:
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-gray-100 text-gray-700';
     }
-  }
+  };
 
-  const onboardingStatus = data.onboarding?.status || 'initial'
-  const isCompleted = onboardingStatus === 'completed'
-  const adHocMeetings = data.onboarding?.meetings?.filter(m => m.isAdHoc) || []
-  const regularMeetings = data.onboarding?.meetings?.filter(m => !m.isAdHoc) || []
+  const onboardingStatus = data.onboarding?.status || 'initial';
+  const isCompleted = onboardingStatus === 'completed';
+  const adHocMeetings = data.onboarding?.meetings?.filter((m) => m.isAdHoc) || [];
+  const regularMeetings = data.onboarding?.meetings?.filter((m) => !m.isAdHoc) || [];
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
@@ -187,7 +190,6 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
         Onboarding
       </h2>
       <div className="space-y-6">
-        {/* Status Section */}
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">Status Onboarding</h3>
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(onboardingStatus)}`}>
@@ -203,7 +205,6 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
           </span>
         </div>
 
-        {/* Meeting Scheduling Section */}
         {!isCompleted && (
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Jadwal Meeting</h3>
@@ -215,7 +216,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                   <input
                     type="date"
                     value={newMeeting.date}
-                    onChange={e => setNewMeeting({ ...newMeeting, date: e.target.value })}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, date: e.target.value })}
                     className="flex-1 text-sm focus:outline-none bg-transparent"
                     disabled={isCompleted}
                   />
@@ -228,7 +229,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                   <input
                     type="time"
                     value={newMeeting.time}
-                    onChange={e => setNewMeeting({ ...newMeeting, time: e.target.value })}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, time: e.target.value })}
                     className="flex-1 text-sm focus:outline-none bg-transparent"
                     disabled={isCompleted}
                   />
@@ -242,7 +243,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                     type="url"
                     placeholder="https://meet.google.com/..."
                     value={newMeeting.link}
-                    onChange={e => setNewMeeting({ ...newMeeting, link: e.target.value })}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, link: e.target.value })}
                     className="flex-1 text-sm focus:outline-none bg-transparent"
                     disabled={isCompleted}
                   />
@@ -253,7 +254,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                 <textarea
                   placeholder="Detail meeting, agenda, dll."
                   value={newMeeting.notes}
-                  onChange={e => setNewMeeting({ ...newMeeting, notes: e.target.value })}
+                  onChange={(e) => setNewMeeting({ ...newMeeting, notes: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300"
                   rows={3}
                   disabled={isCompleted}
@@ -270,7 +271,6 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
           </div>
         )}
 
-        {/* Ad-Hoc Meeting Scheduling */}
         {isCompleted && (
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Meeting Dadakan</h3>
@@ -283,7 +283,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                   <input
                     type="date"
                     value={newMeeting.date}
-                    onChange={e => setNewMeeting({ ...newMeeting, date: e.target.value })}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, date: e.target.value })}
                     className="flex-1 text-sm focus:outline-none bg-transparent"
                   />
                 </div>
@@ -295,7 +295,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                   <input
                     type="time"
                     value={newMeeting.time}
-                    onChange={e => setNewMeeting({ ...newMeeting, time: e.target.value })}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, time: e.target.value })}
                     className="flex-1 text-sm focus:outline-none bg-transparent"
                   />
                 </div>
@@ -308,7 +308,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                     type="url"
                     placeholder="https://meet.google.com/..."
                     value={newMeeting.link}
-                    onChange={e => setNewMeeting({ ...newMeeting, link: e.target.value })}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, link: e.target.value })}
                     className="flex-1 text-sm focus:outline-none bg-transparent"
                   />
                 </div>
@@ -318,7 +318,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                 <textarea
                   placeholder="Detail meeting dadakan, agenda, dll."
                   value={newMeeting.notes}
-                  onChange={e => setNewMeeting({ ...newMeeting, notes: e.target.value })}
+                  onChange={(e) => setNewMeeting({ ...newMeeting, notes: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300"
                   rows={3}
                 />
@@ -333,7 +333,6 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
           </div>
         )}
 
-        {/* Meeting History */}
         {(regularMeetings.length > 0 || adHocMeetings.length > 0) && (
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Riwayat Meeting</h3>
@@ -341,7 +340,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
               <div>
                 <h4 className="text-xs font-medium text-gray-600 mb-2">Meeting Onboarding</h4>
                 <ul className="space-y-3">
-                  {regularMeetings.map(meeting => (
+                  {regularMeetings.map((meeting) => (
                     <li key={meeting.id} className="border border-gray-200 rounded-md p-3 text-sm flex justify-between items-center">
                       <div>
                         <p className="flex items-center gap-2">
@@ -389,7 +388,7 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
                 </button>
                 {showAdHocHistory && (
                   <ul className="space-y-3 mt-2">
-                    {adHocMeetings.map(meeting => (
+                    {adHocMeetings.map((meeting) => (
                       <li key={meeting.id} className="border border-gray-200 rounded-md p-3 text-sm flex justify-between items-center bg-yellow-50">
                         <div>
                           <p className="flex items-center gap-2">
@@ -428,13 +427,12 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
           </div>
         )}
 
-        {/* Analysis Section */}
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-3">Analisis dan Solusi</h3>
           <textarea
             placeholder="Masukkan analisis mendalam terkait pesanan klien, solusi, dan masukkan..."
             value={analysisNotes}
-            onChange={e => setAnalysisNotes(e.target.value)}
+            onChange={(e) => setAnalysisNotes(e.target.value)}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300"
             rows={6}
             disabled={isCompleted}
@@ -449,7 +447,6 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
           )}
         </div>
 
-        {/* Complete/Reopen Onboarding */}
         <div className="flex justify-end gap-2">
           {!isCompleted && (
             <button
@@ -470,5 +467,5 @@ export default function Onboarding({ data, setData, setAlertConfig }: Onboarding
         </div>
       </div>
     </div>
-  )
+  );
 }

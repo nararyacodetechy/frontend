@@ -1,3 +1,4 @@
+// components/auth/LoginForm.tsx
 'use client';
 
 import { useState } from 'react';
@@ -9,7 +10,7 @@ import Link from 'next/link';
 
 export default function LoginForm() {
   const router = useRouter();
-  const { login: setAuthUser } = useAuth();
+  const { login: setAuthUser } = useAuth(); // Ensure this import is correct
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,6 @@ export default function LoginForm() {
     try {
       const response = await login(form);
 
-      // Cek apakah email belum diverifikasi
       if (response.user && !response.user.isEmailVerified) {
         router.push(`/auth/email-not-verified?email=${form.email}`);
         return;

@@ -1,10 +1,18 @@
+// app/dashboard/product-manager/orders/[id]/page.tsx
 'use client';
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { getOrderById, addFeature, updateFeature, deleteFeature, addRequirement, updateRequirement, deleteRequirement } from '@/services/productManagerService';
-import { Order } from '@/types/order';
-import { Feature, RequirementItem } from '@/types/feature';
+import {
+  getOrderById,
+  addFeature,
+  updateFeature,
+  deleteFeature,
+  addRequirement,
+  updateRequirement,
+  deleteRequirement,
+} from '@/services/productManagerOrderService';
+import { Order, Feature } from '@/types/order';
 import CustomAlert from '@/components/general/CustomAlert';
 import InfoClient from '@/components/dashboard/order/InfoClient';
 import InfoOrder from '@/components/dashboard/order/InfoOrder';
@@ -18,22 +26,21 @@ export default function OrderDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const [data, setData] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editFeature, setEditFeature] = useState<Feature | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [newFeature, setNewFeature] = useState<Feature>({
-    id: '',
+  const [newFeature, setNewFeature] = useState<Partial<Feature>>({
     orderId: id as string,
     name: '',
     function: '',
-    price: 0,
+    price: '0',
     duration: '',
     approvalStatus: 'draft',
     requirements: [],
     isMarkedForDiscussion: false,
     discussionNote: '',
     discussionStatus: 'open',
-    createdAt: '',
-    updatedAt: '',
     tasks: [],
   });
   const [newRequirement, setNewRequirement] = useState<{ [key: string]: string }>({});
@@ -47,7 +54,7 @@ export default function OrderDetailPage() {
     type: 'alert' as 'alert' | 'confirm',
     title: '',
     message: '',
-    confirmText: 'Sure',
+    confirmText: 'OK',
     cancelText: 'Cancel',
     onConfirm: () => {},
     onCancel: () => {},
@@ -55,10 +62,11 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     const fetchOrder = async () => {
+      setLoading(true);
       try {
         const response = await getOrderById(id as string);
-        setData(response.data || null);
         if (response.data) {
+          setData(response.data);
           const initialDiscussionStatus = response.data.features.reduce(
             (acc, feature) => ({
               ...acc,
@@ -67,9 +75,13 @@ export default function OrderDetailPage() {
             {}
           );
           setDiscussionStatus(initialDiscussionStatus);
+        } else {
+          setError(response.error || 'Failed to fetch order');
         }
       } catch (error) {
-        console.error('Error fetching order:', error);
+        setError('Failed to fetch order');
+      } finally {
+        setLoading(false);
       }
     };
     fetchOrder();
@@ -77,29 +89,47 @@ export default function OrderDetailPage() {
 
   const handleAddFeature = async () => {
     try {
-      const response = await addFeature(id as string, { ...newFeature, id: undefined });
-      setData((prev) => ({
-        ...prev!,
-        features: [...(prev?.features || []), response.data!],
-      }));
-      setNewFeature({
-        id: '',
-        orderId: id as string,
-        name: '',
-        function: '',
-        price: 0,
-        duration: '',
-        approvalStatus: 'draft',
-        requirements: [],
-        isMarkedForDiscussion: false,
-        discussionNote: '',
-        discussionStatus: 'open',
-        createdAt: '',
-        updatedAt: '',
-        tasks: [],
-      });
+      const response = await addFeature(id as string, newFeature);
+      if (response.data) {
+        setData((prev) => ({
+          ...prev!,
+          features: [...(prev?.features || []), response.data!],
+        }));
+        setNewFeature({
+          orderId: id as string,
+          name: '',
+          function: '',
+          price: '0',
+          duration: '',
+          approvalStatus: 'draft',
+          requirements: [],
+          isMarkedForDiscussion: false,
+          discussionNote: '',
+          discussionStatus: 'open',
+          tasks: [],
+        });
+        setAlertConfig({
+          isOpen: true,
+          type: 'alert',
+          title: 'Success',
+          message: 'Feature added successfully!',
+          confirmText: 'OK',
+          cancelText: '',
+          onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+          onCancel: () => {},
+        });
+      }
     } catch (error) {
-      console.error('Error adding feature:', error);
+      setAlertConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Error',
+        message: 'Failed to add feature',
+        confirmText: 'OK',
+        cancelText: '',
+        onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+        onCancel: () => {},
+      });
     }
   };
 
@@ -112,25 +142,32 @@ export default function OrderDetailPage() {
     setAlertConfig({
       isOpen: true,
       type: 'confirm',
-      title: feature.approvalStatus === 'draft' ? 'Ajukan Fitur' : 'Batalkan Pengajuan',
+      title: feature.approvalStatus === 'draft' ? 'Submit Feature' : 'Cancel Submission',
       message:
         feature.approvalStatus === 'draft'
-          ? 'Yakin ingin mengajukan fitur ini ke klien?'
-          : 'Yakin ingin membatalkan pengajuan fitur ini?',
-      confirmText: feature.approvalStatus === 'draft' ? 'Ajukan' : 'Batalkan',
-      cancelText: 'Batal',
+          ? 'Are you sure you want to submit this feature to the client?'
+          : 'Are you sure you want to cancel this feature submission?',
+      confirmText: feature.approvalStatus === 'draft' ? 'Submit' : 'Cancel',
+      cancelText: 'Cancel',
       onConfirm: async () => {
         try {
           const response = await updateFeature(featureId, { ...feature, approvalStatus: newStatus });
           setData((prev) => ({
             ...prev!,
-            features: prev!.features.map((f) =>
-              f.id === featureId ? response.data! : f
-            ),
+            features: prev!.features.map((f) => (f.id === featureId ? response.data! : f)),
           }));
           setAlertConfig((prev) => ({ ...prev, isOpen: false }));
         } catch (error) {
-          console.error('Error updating feature:', error);
+          setAlertConfig({
+            isOpen: true,
+            type: 'alert',
+            title: 'Error',
+            message: 'Failed to update feature',
+            confirmText: 'OK',
+            cancelText: '',
+            onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+            onCancel: () => {},
+          });
         }
       },
       onCancel: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
@@ -149,21 +186,30 @@ export default function OrderDetailPage() {
       const response = await updateFeature(editFeature.id, editFeature);
       setData({
         ...data,
-        features: data.features.map((f) =>
-          f.id === editFeature.id ? response.data! : f
-        ),
+        features: data.features.map((f) => (f.id === editFeature.id ? response.data! : f)),
       });
       setShowEditModal(false);
       setAlertConfig({
         isOpen: true,
         type: 'alert',
-        title: 'Berhasil',
-        message: 'Permintaan perubahan fitur telah dikirimkan ke klien.',
+        title: 'Success',
+        message: 'Feature updated successfully!',
+        confirmText: 'OK',
+        cancelText: '',
         onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
         onCancel: () => {},
       });
     } catch (error) {
-      console.error('Error updating feature:', error);
+      setAlertConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Error',
+        message: 'Failed to update feature',
+        confirmText: 'OK',
+        cancelText: '',
+        onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+        onCancel: () => {},
+      });
     }
   };
 
@@ -175,8 +221,10 @@ export default function OrderDetailPage() {
       setAlertConfig({
         isOpen: true,
         type: 'confirm',
-        title: 'Hapus Fitur',
-        message: 'Yakin ingin menghapus fitur ini?',
+        title: 'Delete Feature',
+        message: 'Are you sure you want to delete this feature?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
         onConfirm: async () => {
           try {
             await deleteFeature(featureId);
@@ -186,7 +234,16 @@ export default function OrderDetailPage() {
             }));
             setAlertConfig((prev) => ({ ...prev, isOpen: false }));
           } catch (error) {
-            console.error('Error deleting feature:', error);
+            setAlertConfig({
+              isOpen: true,
+              type: 'alert',
+              title: 'Error',
+              message: 'Failed to delete feature',
+              confirmText: 'OK',
+              cancelText: '',
+              onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+              onCancel: () => {},
+            });
           }
         },
         onCancel: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
@@ -195,27 +252,38 @@ export default function OrderDetailPage() {
       setAlertConfig({
         isOpen: true,
         type: 'confirm',
-        title: 'Ajukan Penghapusan',
-        message: 'Fitur ini sudah diajukan atau disetujui.\n\nIngin mengajukan permintaan penghapusan fitur ke klien?',
+        title: 'Request Deletion',
+        message: 'This feature is submitted or approved. Request deletion from the client?',
+        confirmText: 'Request',
+        cancelText: 'Cancel',
         onConfirm: async () => {
           try {
             const response = await updateFeature(featureId, { ...feature, deletionRequest: true });
             setData((prev) => ({
               ...prev!,
-              features: prev!.features.map((f) =>
-                f.id === featureId ? response.data! : f
-              ),
+              features: prev!.features.map((f) => (f.id === featureId ? response.data! : f)),
             }));
             setAlertConfig({
               isOpen: true,
               type: 'alert',
-              title: 'Pengajuan Dikirim',
-              message: 'Permintaan penghapusan telah diajukan ke klien.',
+              title: 'Request Sent',
+              message: 'Deletion request sent to client.',
+              confirmText: 'OK',
+              cancelText: '',
               onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
               onCancel: () => {},
             });
           } catch (error) {
-            console.error('Error requesting feature deletion:', error);
+            setAlertConfig({
+              isOpen: true,
+              type: 'alert',
+              title: 'Error',
+              message: 'Failed to request feature deletion',
+              confirmText: 'OK',
+              cancelText: '',
+              onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+              onCancel: () => {},
+            });
           }
         },
         onCancel: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
@@ -230,13 +298,21 @@ export default function OrderDetailPage() {
       setData((prev) => ({
         ...prev!,
         features: prev!.features.map((f) =>
-          f.id === featureId
-            ? { ...f, requirements: [...(f.requirements || []), response.data!] }
-            : f
+          f.id === featureId ? { ...f, requirements: [...(f.requirements || []), response.data!] } : f
         ),
       }));
+      setNewRequirement((prev) => ({ ...prev, [featureId]: '' }));
     } catch (error) {
-      console.error('Error adding requirement:', error);
+      setAlertConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Error',
+        message: 'Failed to add requirement',
+        confirmText: 'OK',
+        cancelText: '',
+        onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+        onCancel: () => {},
+      });
     }
   };
 
@@ -246,13 +322,20 @@ export default function OrderDetailPage() {
       setData((prev) => ({
         ...prev!,
         features: prev!.features.map((f) =>
-          f.id === featureId
-            ? { ...f, requirements: f.requirements?.filter((r) => r.id !== requirementId) }
-            : f
+          f.id === featureId ? { ...f, requirements: f.requirements?.filter((r) => r.id !== requirementId) } : f
         ),
       }));
     } catch (error) {
-      console.error('Error deleting requirement:', error);
+      setAlertConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Error',
+        message: 'Failed to delete requirement',
+        confirmText: 'OK',
+        cancelText: '',
+        onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+        onCancel: () => {},
+      });
     }
   };
 
@@ -266,7 +349,10 @@ export default function OrderDetailPage() {
   const handleSaveEditRequirement = async () => {
     if (!editingRequirement) return;
     try {
-      const response = await updateRequirement(editingRequirement.requirementId, { title: editRequirementValue, status: 'pending' });
+      const response = await updateRequirement(editingRequirement.requirementId, {
+        title: editRequirementValue,
+        status: 'pending',
+      });
       setData((prev) => ({
         ...prev!,
         features: prev!.features.map((f) =>
@@ -283,13 +369,22 @@ export default function OrderDetailPage() {
       setEditingRequirement(null);
       setEditRequirementValue('');
     } catch (error) {
-      console.error('Error updating requirement:', error);
+      setAlertConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Error',
+        message: 'Failed to update requirement',
+        confirmText: 'OK',
+        cancelText: '',
+        onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+        onCancel: () => {},
+      });
     }
   };
 
-  if (!data) {
-    return <div className="p-6">Order tidak ditemukan.</div>;
-  }
+  if (loading) return <div className="p-6">Loading...</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
+  if (!data) return <div className="p-6">Order not found.</div>;
 
   return (
     <>
@@ -307,32 +402,32 @@ export default function OrderDetailPage() {
       {showEditModal && editFeature && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md border border-gray-300 shadow-lg relative">
-            <h2 className="text-lg text-gray-700 font-semibold mb-4">Edit Fitur</h2>
+            <h2 className="text-lg text-gray-700 font-semibold mb-4">Edit Feature</h2>
             <div className="flex flex-col gap-3">
               <input
                 type="text"
-                placeholder="Nama fitur"
+                placeholder="Feature Name"
                 className="border border-gray-400 px-3 py-2 rounded"
                 value={editFeature.name}
                 onChange={(e) => setEditFeature({ ...editFeature, name: e.target.value })}
               />
               <input
                 type="text"
-                placeholder="Fungsi"
+                placeholder="Function"
                 className="border border-gray-400 px-3 py-2 rounded"
                 value={editFeature.function}
                 onChange={(e) => setEditFeature({ ...editFeature, function: e.target.value })}
               />
               <input
                 type="number"
-                placeholder="Harga"
+                placeholder="Price"
                 className="border border-gray-400 px-3 py-2 rounded"
                 value={editFeature.price}
-                onChange={(e) => setEditFeature({ ...editFeature, price: Number(e.target.value) })}
+                onChange={(e) => setEditFeature({ ...editFeature, price: e.target.value })}
               />
               <input
                 type="text"
-                placeholder="Durasi"
+                placeholder="Duration"
                 className="border border-gray-400 px-3 py-2 rounded"
                 value={editFeature.duration}
                 onChange={(e) => setEditFeature({ ...editFeature, duration: e.target.value })}
@@ -343,20 +438,20 @@ export default function OrderDetailPage() {
                 onClick={() => setShowEditModal(false)}
                 className="px-3 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
               >
-                Batal
+                Cancel
               </button>
               <button
                 onClick={handleEditSaveFeature}
                 className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Simpan Perubahan
+                Save Changes
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         <InfoClient data={data} />
         <InfoOrder data={data} />
         <Onboarding data={data} setData={setData} setAlertConfig={setAlertConfig} />

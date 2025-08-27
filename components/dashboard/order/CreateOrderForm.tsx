@@ -1,4 +1,4 @@
-// app/my-page/user/orders/create/page.tsx
+// src/components/user/CreateOrderForm.tsx
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +7,7 @@ import { createOrder } from '@/services/userOrderService';
 import { Order } from '@/types/order';
 import CustomAlert from '@/components/general/CustomAlert';
 
-export default function CreateOrderPage() {
+export default function CreateOrderForm() {
   const router = useRouter();
   const [formData, setFormData] = useState<Partial<Order>>({
     orderName: '',
@@ -17,6 +17,17 @@ export default function CreateOrderPage() {
     image: '',
     budgetPrice: '0',
     designPreference: { color: '', style: '' },
+    status: 'under-review',
+    paymentMethod: 'bank_transfer',
+    paymentProof: '',
+    totalPriceFeatures: '0',
+    totalPriceFinal: '0',
+    pricingStatus: 'negotiating',
+    paymentTerms: 'installments',
+    paymentStatus: 'pending',
+    features: [],
+    pricingProposals: [],
+    onboarding: { status: 'initial', analysisNotes: '', meetings: [] },
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,12 +76,24 @@ export default function CreateOrderPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!formData.orderName || !formData.projectType || !formData.projectDetail || !formData.budgetPrice) {
+      setAlertConfig({
+        isOpen: true,
+        type: 'alert',
+        title: 'Data Tidak Lengkap',
+        message: 'Harap isi semua kolom yang diperlukan.',
+        confirmText: 'OK',
+        cancelText: '',
+        onConfirm: () => setAlertConfig((prev) => ({ ...prev, isOpen: false })),
+        onCancel: () => {},
+      });
+      return;
+    }
 
+    setLoading(true);
     try {
       let imageUrl = formData.image;
       if (imageFile) {
-        // Placeholder for image upload logic
         const formDataUpload = new FormData();
         formDataUpload.append('image', imageFile);
         const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
@@ -80,7 +103,7 @@ export default function CreateOrderPage() {
         });
         if (uploadResponse.ok) {
           const uploadData = await uploadResponse.json();
-          imageUrl = uploadData.url; // Assume backend returns image URL
+          imageUrl = uploadData.url;
         } else {
           throw new Error('Failed to upload image');
         }
@@ -137,7 +160,7 @@ export default function CreateOrderPage() {
         onConfirm={alertConfig.onConfirm}
         onCancel={alertConfig.onCancel}
       />
-      <h1 className="text-2xl font-semibold">Create New Order</h1>
+      <h2 className="text-2xl font-semibold">Create New Order</h2>
       <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Order Name</label>

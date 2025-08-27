@@ -1,4 +1,4 @@
-// components/dashboard/MyPageLayout.tsx
+// components/layout/MyPageLayout.tsx
 import React, { ReactNode } from 'react';
 
 export default function MyPageLayout({ children }: { children: ReactNode }) {

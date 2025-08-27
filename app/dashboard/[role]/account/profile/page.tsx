@@ -8,8 +8,6 @@ export default async function ProfilePage() {
   const cookie = (await headers()).get('cookie') || '';
   const profile = await fetchMyProfile({ cookie });
 
-  console.log('profile:', profile);
-
   if (!profile) {
     return (
       <div className="flex items-center justify-center h-40">
